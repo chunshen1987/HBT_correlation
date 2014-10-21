@@ -1,0 +1,76 @@
+SHELL=/bin/sh
+
+# This file contains a set of rules used by the "make"
+#   command.  This makefile $(MAKEFILE) tells "make" how the
+#   executable $(COMMAND) should be created
+#   from the source files $(SRCS) via the object
+#   files $(OBJS) and the header files $(HDRS); type the command:
+#        "make -f make_emissionfunctINT"
+# 
+# This file also tells make what to do if arguments
+#   follow the "make" command.
+#
+# To remove the OBJS files; type the command:
+#        "make -f make_emissionfunctINT clean"
+#
+# To create a gzipped tar file with name $(COMMAND).tar.gz
+#  containing this makefile and the SRCS files,
+#  type the command:
+#        "make -f make_emissionfunctINT tarz"
+ 
+SRCS= \
+main.cpp \
+readindata.cpp \
+HBT.cpp \
+Arsenal.cpp \
+gauss.cpp
+	 
+OBJS= \
+main.o \
+readindata.o \
+HBT.o \
+Arsenal.o
+
+
+HDRS= \
+parameters.h \
+readindata.h \
+HBT.h \
+Arsenal.h \
+Stopwatch.h
+
+MAKEFILE=make_HBT
+
+COMMAND=HBT
+
+OBJS= $(addsuffix .o, $(basename $(SRCS)))
+
+CC= g++
+CFLAGS=  -g
+WARNFLAGS= -ansi -pedantic -Wall -W \
+   -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align \
+   -Wwrite-strings -fshort-enums -fno-common 
+LDFLAGS= -lgsl -lgslcblas 
+LIBS= -L/sw/lib -I/sw/include
+
+ 
+$(COMMAND): $(OBJS) $(HDRS) $(MAKEFILE) 
+	$(CC) -o $(COMMAND) $(OBJS) $(LDFLAGS) $(LIBS)
+                 
+main.o : main.cpp  parameters.h readindata.h HBT.h
+	$(CC) $(CFLAGS) $(WARNFLAGS) $(LIBS) -c main.cpp -o main.o
+ 
+readindata.o : parameters.h readindata.h readindata.cpp
+	$(CC) $(CFLAGS) $(WARNFLAGS) $(LIBS) -c readindata.cpp -o readindata.o
+
+HBT.o : HBT.h parameters.h HBT.cpp Arsenal.h
+	$(CC) $(CFLAGS) $(WARNFLAGS) $(LIBS) -c HBT.cpp -o HBT.o
+
+Arsenal.o : Arsenal.cpp Arsenal.h
+	$(CC) $(CFLAGS) $(WARNFLAGS) $(LIBS) -c Arsenal.cpp -o Arsenal.o
+clean:
+	rm -f $(OBJS)
+ 
+tarz:
+	tar zcf - $(MAKEFILE) $(SRCS) $(HDRS) > $(COMMAND).tar.gz
+ 
