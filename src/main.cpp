@@ -7,10 +7,9 @@
 //
 //        Date: 11/22/11
 //  The HBT part of the code is reorganized in the class style for easy 
-//  maintainance and furture extension.  --- 04/15/2012
+//  maintenance and future extension.  --- 04/15/2012
 //
-//===============================================================================
-
+//=============================================================================
 
 #include<iostream>
 #include<iomanip>
@@ -20,7 +19,6 @@
 #include<math.h>
 #include<sys/time.h>
 
-
 #include<gsl/gsl_sf_bessel.h>
 #include<gsl/gsl_rng.h>
 #include<gsl/gsl_randist.h>
@@ -29,72 +27,55 @@
 #include "parameters.h"
 #include "readindata.h"
 #include "HBT.h"
+#include "arsenal.h"
+#include "ParameterReader.h"
 
 using namespace std;
 
-int main()
+int main(int argc, char *argv[])
 {
+   cout << endl
+        << "                  iHBT                   " << endl
+        << endl
+        << "  Ver 1.2   ----- Chun Shen, 10/2014   " << endl;
+   cout << endl << "**********************************************************" << endl;
+   display_logo(2); // Hail to the king~
+   cout << endl << "**********************************************************" << endl << endl;
+   
+   // Read-in parameters
+   ParameterReader *paraRdr = new ParameterReader;
+   paraRdr->readFromFile("parameters.dat");
+   paraRdr->readFromArguments(argc, argv);
+   paraRdr->echo();
+   
+   string path="results";
+
    Stopwatch sw;
    Stopwatch sw_total;
    sw_total.tic();
    sw.tic();
-   hydropara* hydropara_ptr=new hydropara;
-   //load hydro parameters
-   read_hydropar(hydropara_ptr);
-   
+
    //load freeze out information
+   read_FOdata freeze_out_data(paraRdr, path);
+
    int FO_length = 0;
-   ostringstream decdatfile;
-   cout << "Loading the decoupling data...." << endl;
-   decdatfile << path << "/decdat2.dat";
-   FO_length=get_filelength(decdatfile.str().c_str());
-   cout <<"Total number of freeze out fluid cell: " <<  FO_length << endl;
+   FO_length = freeze_out_data.get_number_of_freezeout_cells();
+   cout <<"total number of cells: " <<  FO_length << endl;
 
-   //read the data arrays for the decoupling information
    FO_surf* FOsurf_ptr = new FO_surf[FO_length];
-   read_decdat(FO_length, FOsurf_ptr);
-   
-   //read the positions of the freeze out surface
-   read_surfdat(FO_length, FOsurf_ptr);
-   
-   //read the chemical potential on the freeze out surface
-   int N_stableparticle;
-   ifstream particletable("EOS/EOS_particletable.dat");
-   particletable >> N_stableparticle;
-   double** particle_mu = new double* [N_stableparticle];
-   for(int i=0; i<N_stableparticle; i++)
-      particle_mu[i] = new double [FO_length];
-   for(int i=0; i<N_stableparticle; i++)
-      for(int j=0; j<FO_length; j++)
-         particle_mu[i][j] = 0.0;
-   if(N_stableparticle >0)
-   {
-      if(hydropara_ptr->IEOS==7)       //for s95p_PCE
-         read_decdat_mu(FO_length, N_stableparticle, particle_mu);
-   }
-
-   //read particle resonance decay table
-   particle_info *particle = new particle_info [Maxparticle];
-   int Nparticle=read_resonance(particle);
-   cout <<"read in total " << Nparticle << " particles!" << endl;
-   if(N_stableparticle >0)
-   {
-      cout << " EOS is partically chemical equilibrium " << endl;
-      calculate_particle_mu(hydropara_ptr->IEOS, Nparticle, FOsurf_ptr, FO_length, particle, particle_mu);
-   }
-   else
-   {
-      cout << " EOS is chemical equilibrium. " << endl;
-      for(int i=0; i<FO_length; i++)
-      for(int j=0; j<Nparticle; j++)
+   for(int i=0; i<FO_length; i++)
+     for(int j=0; j<Maxparticle; j++)
          FOsurf_ptr[i].particle_mu[j] = 0.0e0;
-   }
-   //for(int i=0;i<Nparticle;i++)
-     //cout << particle[i].mu << "  " << particle[i].sing << endl;
-   sw.toc();
-   cout << "read in data finished!" << endl;
-   cout << "Used " << sw.takeTime() << " sec." << endl;
 
+   freeze_out_data.read_in_freeze_out_data(FO_length, FOsurf_ptr);
+
+   //read the chemical potential on the freeze out surface
+   particle_info *particle = new particle_info [Maxparticle];
+   int Nparticle = freeze_out_data.read_in_chemical_potentials(path, FO_length, FOsurf_ptr, particle);
+   
+   cout << endl << " -- Read in data finished!" << endl << endl;
+   cout << "Used " << sw.takeTime() << " sec." << endl;
+/*
    //HBT calculations begins ...
    int particle_idx=1;  //for pion+
    cout << "Calculating "<< particle[particle_idx].name << endl;
@@ -143,6 +124,7 @@ int main()
       }
    }
    OPfile.close();
+   */
    sw_total.toc();
    cout << "Program totally finished in " << sw_total.takeTime() << " sec." << endl;
    return 0;

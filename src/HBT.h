@@ -55,6 +55,9 @@ int Fittarget_correlfun3D_fdf_withlambda (const gsl_vector* xvec_ptr, void *para
 class HBT
 {
    private:
+      FO_surf* FOsurf_ptr;
+      particle_info* particle_ptr;
+
       //particle information 
       string particle_name;
       double particle_mass;
@@ -113,7 +116,7 @@ class HBT
       double R_os_Correl_err;
 
    public:
-      HBT(particle_info* particle, double p_T, double p_phi, double p_y, int FOarray_length, int particle_idx);
+      HBT(particle_info* particle_in, int particle_idx, FO_surf* FOsurf_ptr_in, int FOarray_length);
       ~HBT();
 
       double get_lambda_Correl() {return(lambda_Correl);};
@@ -132,6 +135,7 @@ class HBT
       double Emissionfunction(double p0, double px, double py, double pz, FO_surf* surf);
 
       void Cal_HBTRadii_fromEmissionfunction();
+      void calculate_azimuthal_dependent_HBT_radii(double p_T, double p_phi, double y);
 
       void Cal_correlationfunction_1D();
       void Cal_correlationfunction_3D();

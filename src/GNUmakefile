@@ -24,11 +24,11 @@ ifeq "$(MAIN)" ""
 MAIN		=	HBT.e
 endif
 
-SRC		=	main.cpp readindata.cpp HBT.cpp Arsenal.cpp \
-			gauss.cpp
+SRC		=	main.cpp readindata.cpp HBT.cpp arsenal.cpp \
+			gauss_quadrature.cpp ParameterReader.cpp Table.cpp
 
-INC		= 	parameters.h Arsenal.h HBT.h \
-                  readindata.h Stopwatch.h
+INC		= 	parameters.h arsenal.h HBT.h ParameterReader.h \
+                  readindata.h Stopwatch.h Table.h gauss_quadrature.h
 
 # -------------------------------------------------
 
@@ -74,8 +74,9 @@ install:	$(TARGET)
 		cp $(TARGET) $(INSTPATH)
 
 # --------------- Dependencies -------------------
-./main.cpp: readindata.h HBT.h Arsenal.h parameters.h Stopwatch.h
-./Arsenal.cpp: Arsenal.h
-./HBT.cpp: HBT.h parameters.h Arsenal.h readindata.h
-./readindata.cpp: parameters.h readindata.h
-
+./main.cpp: readindata.h HBT.h arsenal.h parameters.h Stopwatch.h ParameterReader.h
+./arsenal.cpp: arsenal.h gauss_quadrature.h
+./gauss_quadrature.cpp: gauss_quadrature.h
+./HBT.cpp: HBT.h parameters.h arsenal.h readindata.h
+./readindata.cpp: parameters.h readindata.h ParameterReader.h
+./ParameterReader.cpp: ParameterReader.h arsenal.h

@@ -14,21 +14,20 @@
 #include <gsl/gsl_multifit_nlin.h>  // gsl multidimensional fitting
 
 #include "HBT.h"
-#include "Arsenal.h"
+#include "arsenal.h"
 
 using namespace std;
 
-HBT::HBT(particle_info* particle, double p_T, double p_phi, double p_y, int FOarray_length, int particle_idx)
+HBT::HBT(particle_info* particle_in, int particle_idx, FO_surf* FOsurf_ptr_in, int FOarray_length)
 {
-   particle_name = particle->name;
-   particle_mass = particle->mass;
-   particle_sign = particle->sing;
-   particle_gspin = particle->gspin;
-   particle_id = particle_idx;
+   particle_ptr = particle_in;
+   FOsurf_ptr = FOsurf_ptr_in;
 
-   K_T = p_T;
-   K_phi = p_phi;
-   K_y = p_y;
+   particle_name = particle_ptr->name;
+   particle_mass = particle_ptr->mass;
+   particle_sign = particle_ptr->sign;
+   particle_gspin = particle_ptr->gspin;
+   particle_id = particle_idx;
 
    FO_length = FOarray_length;
    Emissionfunction_length = FO_length*eta_s_npts;
@@ -50,7 +49,7 @@ HBT::HBT(particle_info* particle, double p_T, double p_phi, double p_y, int FOar
 
    eta_s = new double [eta_s_npts];
    eta_s_weight = new double [eta_s_npts];
-   gauss(eta_s_npts, 0, eta_s_i, eta_s_f, eta_s, eta_s_weight);
+   gauss_quadrature(eta_s_npts, 1, 0.0, 0.0, eta_s_i, eta_s_f, eta_s, eta_s_weight);
 
    q_out = new double [qnpts];
    q_side = new double [qnpts];
@@ -97,7 +96,6 @@ HBT::HBT(particle_info* particle, double p_T, double p_phi, double p_y, int FOar
             Correl_3D_err[i][j][k] = 0.0;
          }
 
-
    return;
 }
 
@@ -137,7 +135,26 @@ HBT::~HBT()
    return;
 }
 
-void HBT::SetEmissionData(FO_surf* FOsurf_ptr)
+void HBT::calculate_azimuthal_dependent_HBT_radii(double p_T, double p_phi, double y)
+{
+   cout << "Calculating "<< particle_name << endl;
+
+   K_T = p_T;
+   K_phi = p_phi;
+   K_y = y;
+   
+   SetEmissionData(FOsurf_ptr);
+   Cal_HBTRadii_fromEmissionfunction();
+   //HBT_hadron.Cal_correlationfunction_1D_MC();
+   //HBT_hadron.Fit_Correlationfunction1D();
+   //HBT_hadron.Output_Correlationfunction_1D();
+   //HBT_hadron.Cal_correlationfunction_3D_MC();
+   //HBT_hadron.Fit_Correlationfunction3D();
+
+
+}
+
+void HBT::SetEmissionData(FO_surf* FO_surface)
 {
   double mass = particle_mass;
   double mT = sqrt(mass*mass + K_T*K_T);
@@ -159,19 +176,19 @@ void HBT::SetEmissionData(FO_surf* FOsurf_ptr)
 	{
 	  //Now that the data is loaded, cycle through it to find the freeze out surface and the emission function.
 	  double S_p = 0.0e0;
-        S_p = Emissionfunction(p0, px, py, pz, &FOsurf_ptr[j]);
+        S_p = Emissionfunction(p0, px, py, pz, &FO_surface[j]);
         if (flagneg == 1 && S_p < tol)
         {
            S_p = 0.0e0;
         }
 	  else
         {
-           double S_p_withweight = S_p*FOsurf_ptr[j].tau*eta_s_weight[i];
+           double S_p_withweight = S_p*FO_surface[j].tau*eta_s_weight[i];
            Emissionfunction_Data[idx] = S_p_withweight; 
-           Emissionfunction_t[idx] = FOsurf_ptr[j].tau*ch_localetas;
-           Emissionfunction_x[idx] = FOsurf_ptr[j].xpt;
-           Emissionfunction_y[idx] = FOsurf_ptr[j].ypt;
-           Emissionfunction_z[idx] = FOsurf_ptr[j].tau*sh_localetas;
+           Emissionfunction_t[idx] = FO_surface[j].tau*ch_localetas;
+           Emissionfunction_x[idx] = FO_surface[j].xpt;
+           Emissionfunction_y[idx] = FO_surface[j].ypt;
+           Emissionfunction_z[idx] = FO_surface[j].tau*sh_localetas;
            CDF += S_p_withweight;
            Emissionfunction_Data_CDF[idx] = CDF;
            idx++;
@@ -180,7 +197,7 @@ void HBT::SetEmissionData(FO_surf* FOsurf_ptr)
   }
   Emissionfunction_length = idx;
 
-  //nomalize CDF to unity
+  //normalize CDF to unity
   //ofstream CDF_check("CDF_check.dat");
   for(int i=0; i<Emissionfunction_length; i++)
   {
@@ -198,8 +215,9 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
    double sign = particle_sign;
    double degen = particle_gspin;
 
-   double vx = surf->vx;
-   double vy = surf->vy;
+   double gammaT = surf->u0;
+   double vx = surf->u1/gammaT;
+   double vy = surf->u2/gammaT;
    double Tdec = surf->Tdec;
    double Pdec = surf->Pdec;
    double Edec = surf->Edec;
@@ -213,9 +231,6 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
    double pi12 = surf->pi12;
    double pi22 = surf->pi22;
    double pi33 = surf->pi33;
-
-   double vT = sqrt(vx*vx + vy*vy);
-   double gammaT = 1./sqrt(1. - vT*vT);
 
    double expon = (gammaT*(p0*1. - px*vx - py*vy) - mu) / Tdec;
    double f0 = 1./(exp(expon)+sign);       //thermal equilibrium distributions
@@ -512,7 +527,7 @@ void HBT::Cal_correlationfunction_1D_MC()
    double randnum;
    gsl_rng *rng_ptr;
    rng_ptr = gsl_rng_alloc (gsl_rng_taus);
-   seed = random_seed();
+   seed = random_seed(-1);
    gsl_rng_set(rng_ptr, seed);
 
    for(int i = 0; i < qnpts; i++)
@@ -639,7 +654,7 @@ void HBT::Cal_correlationfunction_3D_MC()
    double randnum;
    gsl_rng *rng_ptr;
    rng_ptr = gsl_rng_alloc (gsl_rng_taus);
-   seed = random_seed();
+   seed = random_seed(-1);
    gsl_rng_set(rng_ptr, seed);
 
    for(int i = 0; i < qnpts; i++)  // q_out loop
