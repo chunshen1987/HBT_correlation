@@ -20,7 +20,8 @@
 
 #include "readindata.h"
 #include "parameters.h"
-#include "Arsenal.h"
+#include "arsenal.h"
+#include "ParameterReader.h"
 
 using namespace std;
 
@@ -55,39 +56,41 @@ int Fittarget_correlfun3D_fdf_withlambda (const gsl_vector* xvec_ptr, void *para
 class HBT
 {
    private:
+      string path;
+      ParameterReader* paraRdr;
       FO_surf* FOsurf_ptr;
-      particle_info* particle_ptr;
+      int FO_length;        // number of the freeze out surface cells
+      particle_info* particle_ptr; // particle information
+      int particle_id;             // particle id
 
-      //particle information 
-      string particle_name;
-      double particle_mass;
-      int particle_id;     //particle id
-      double particle_sign;   //+/- 1 for Fermi/Bose statistic for baryon/meson
-      double particle_gspin;  //particle degeneracy 
-     
-      //pair momentum
+      // pair momentum
       double K_T, K_phi, K_y;
      
-      //Emission function
+      // array for eta_s
+      int eta_s_npts;
+      double *eta_s, *eta_s_weight;
+
+      int INCLUDE_SHEAR_DELTAF, INCLUDE_BULK_DELTAF;
+
+      // Emission function
+      int Emissionfunction_length;  // length of the emission function array
       double* Emissionfunction_Data;
       double* Emissionfunction_t;
       double* Emissionfunction_x;
       double* Emissionfunction_y;
       double* Emissionfunction_z;
       double* Emissionfunction_Data_CDF;
-      int Emissionfunction_length;
-      int FO_length;
 
-      double* eta_s;
-      double* eta_s_weight;
-
+      int flag_neg;
       double spectra;
 
-      double* q_out;
-      double* q_side;
-      double* q_long;
+      int qnpts;
+      double *q_out, *q_side, *q_long;
 
       //store correlation functions
+      int MCint_calls;
+      double fit_tolarence;
+      int fit_max_iterations;
       double* Correl_1D_out;
       double* Correl_1D_out_err;
       double* Correl_1D_side;
@@ -116,7 +119,7 @@ class HBT
       double R_os_Correl_err;
 
    public:
-      HBT(particle_info* particle_in, int particle_idx, FO_surf* FOsurf_ptr_in, int FOarray_length);
+      HBT(string path_in, ParameterReader* paraRdr, particle_info* particle_in, int particle_idx, FO_surf* FOsurf_ptr_in, int FOarray_length);
       ~HBT();
 
       double get_lambda_Correl() {return(lambda_Correl);};
@@ -130,7 +133,9 @@ class HBT
       double get_Ros_Correl() {return(R_os_Correl);};
       double get_Ros_Correl_err() {return(R_os_Correl_err);};
 
-      void SetEmissionData(FO_surf* FOsurf_ptr);
+      void SetEmissionData(FO_surf* FO_surface, double K_rap);
+      void SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T);
+      void SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T, double K_phi);
 
       double Emissionfunction(double p0, double px, double py, double pz, FO_surf* surf);
 

@@ -75,9 +75,13 @@ int main(int argc, char *argv[])
    
    cout << endl << " -- Read in data finished!" << endl << endl;
    cout << "Used " << sw.takeTime() << " sec." << endl;
-/*
+
    //HBT calculations begins ...
    int particle_idx=1;  //for pion+
+   HBT HBT_hadron(path, paraRdr, particle, particle_idx, FOsurf_ptr, FO_length);
+   HBT_hadron.calculate_azimuthal_dependent_HBT_radii(0.0, 0.0, 0.0);
+   
+   /*
    cout << "Calculating "<< particle[particle_idx].name << endl;
    
    ostringstream OPHBTradii;
