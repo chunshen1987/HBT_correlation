@@ -154,17 +154,44 @@ void HBT::calculate_azimuthal_dependent_HBT_radii(double p_T, double p_phi, doub
 {
    cout << "Calculating "<< particle_ptr[particle_id].name << endl;
 
-   K_T = p_T;
-   K_phi = p_phi;
-   K_y = y;
-   
    SetEmissionData(FOsurf_ptr, y, p_T, p_phi);
-   Cal_HBTRadii_fromEmissionfunction();
+   Cal_HBTRadii_fromEmissionfunction(p_T, p_phi, y);
    //HBT_hadron.Cal_correlationfunction_1D_MC();
    //HBT_hadron.Fit_Correlationfunction1D();
    //HBT_hadron.Output_Correlationfunction_1D();
    //HBT_hadron.Cal_correlationfunction_3D_MC();
    //HBT_hadron.Fit_Correlationfunction3D();
+}
+
+void HBT::calculate_azimuthal_averaged_HBT_radii(double y)
+{
+   cout << "Calculating "<< particle_ptr[particle_id].name << endl;
+
+   double KT_min = paraRdr->getVal("KT_min");
+   double KT_max = paraRdr->getVal("KT_max");
+   double n_KT = paraRdr->getVal("n_KT");
+   double dKT = (KT_max - KT_min)/(n_KT - 1);
+   ostringstream filename;
+   filename << path << "/HBT_radii_sourcevariance.dat";
+   ofstream results_SV(filename.str().c_str());
+   for(int i = 0; i < n_KT; i++)
+   {
+       double KT_local = KT_min + i*dKT;
+       SetEmissionData(FOsurf_ptr, y, KT_local);
+       Cal_HBTRadii_fromEmissionfunction(KT_local, 0.0, 0.0);
+       results_SV << scientific << setw(18) << setprecision(8)
+                  << KT_local << "   " << R_out_EM << "   " 
+                  << R_side_EM << "   " << R_long_EM << endl;
+   }
+   results_SV.close();
+}
+
+void HBT::calculate_azimuthal_averaged_KT_integrated_HBT_radii(double y)
+{
+   cout << "Calculating "<< particle_ptr[particle_id].name << endl;
+
+   SetEmissionData(FOsurf_ptr, y);
+   Cal_HBTRadii_fromEmissionfunction(0.0, 0.0, 0.0);
 }
 
 void HBT::SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T, double K_phi)
@@ -434,7 +461,7 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
    return (dN_dyd2pTdphi);
 }
 
-void HBT::Cal_HBTRadii_fromEmissionfunction()
+void HBT::Cal_HBTRadii_fromEmissionfunction(double K_T, double K_phi, double K_y)
 {
   double* resultsX = new double[15];
   for(int i = 0; i < 15; i++)
@@ -508,10 +535,10 @@ void HBT::Cal_HBTRadii_fromEmissionfunction()
 
   double R_out2 = S11*cos(K_phi)*cos(K_phi) + S22*sin(K_phi)*sin(K_phi) 
                   + S12*sin(2*K_phi) - 2*beta_T*(S01*cos(K_phi) 
-                  + S02*sin(K_phi))+ beta_T*beta_T*S00;   //R_out^2
+                  + S02*sin(K_phi))+ beta_T*beta_T*S00;          //R_out^2
   double R_side2 = S11*sin(K_phi)*sin(K_phi) + S22*cos(K_phi)*cos(K_phi) 
-                   - S12*sin(2*K_phi);          //R_side^2
-  double R_long2 = S33 - 2*beta_L*S03 + beta_L*beta_L*S00;  //R_long^2
+                   - S12*sin(2*K_phi);                           //R_side^2
+  double R_long2 = S33 - 2*beta_L*S03 + beta_L*beta_L*S00;       //R_long^2
 
   R_out_EM = sqrt(R_out2);
   R_side_EM = sqrt(R_side2);
@@ -528,6 +555,9 @@ void HBT::Cal_HBTRadii_fromEmissionfunction()
 
 void HBT::Cal_correlationfunction_1D()
 {
+   double K_y = 0.0;
+   double K_T = 0.0;
+   double K_phi = 0.0;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"HBT:: not support for y not equals 0 yet!" << endl;
@@ -626,6 +656,9 @@ void HBT::Cal_correlationfunction_1D()
 
 void HBT::Cal_correlationfunction_3D()
 {
+   double K_y = 0.0;
+   double K_T = 0.0;
+   double K_phi = 0.0;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"not support for y not equals 0 yet!" << endl;
@@ -692,6 +725,9 @@ void HBT::Cal_correlationfunction_3D()
 
 void HBT::Cal_correlationfunction_1D_MC()
 {
+   double K_y = 0.0;
+   double K_T = 0.0;
+   double K_phi = 0.0;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"not support for y not equals 0 yet!" << endl;
@@ -819,6 +855,9 @@ void HBT::Cal_correlationfunction_1D_MC()
 
 void HBT::Cal_correlationfunction_3D_MC()
 {
+   double K_y = 0.0;
+   double K_T = 0.0;
+   double K_phi = 0.0;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"not support for y not equals 0 yet!" << endl;
@@ -941,6 +980,9 @@ int HBT::binary_search(double* dataset, int data_length, double value)
 
 void HBT::Output_Correlationfunction_1D()
 {
+   double K_y = 0.0;
+   double K_T = 0.0;
+   double K_phi = 0.0;
    ostringstream oCorrelfun_1D_stream;
    oCorrelfun_1D_stream << path << "/correlfunct1D" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << "_phi_" << K_phi << ".dat";
    ofstream oCorrelfun_1D;
@@ -956,6 +998,9 @@ void HBT::Output_Correlationfunction_1D()
 
 void HBT::Output_Correlationfunction_3D()
 {
+   double K_y = 0.0;
+   double K_T = 0.0;
+   double K_phi = 0.0;
    ostringstream oCorrelfun_3D_stream;
    oCorrelfun_3D_stream << path << "/correlfunct3D" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << "_phi_" << K_phi << ".dat";
    ofstream oCorrelfun_3D;

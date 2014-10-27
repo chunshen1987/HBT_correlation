@@ -62,9 +62,6 @@ class HBT
       int FO_length;        // number of the freeze out surface cells
       particle_info* particle_ptr; // particle information
       int particle_id;             // particle id
-
-      // pair momentum
-      double K_T, K_phi, K_y;
      
       // array for eta_s
       int eta_s_npts;
@@ -139,8 +136,10 @@ class HBT
 
       double Emissionfunction(double p0, double px, double py, double pz, FO_surf* surf);
 
-      void Cal_HBTRadii_fromEmissionfunction();
+      void Cal_HBTRadii_fromEmissionfunction(double K_T, double K_phi, double K_y);
       void calculate_azimuthal_dependent_HBT_radii(double p_T, double p_phi, double y);
+      void calculate_azimuthal_averaged_HBT_radii(double y);
+      void calculate_azimuthal_averaged_KT_integrated_HBT_radii(double y);
 
       void Cal_correlationfunction_1D();
       void Cal_correlationfunction_3D();
