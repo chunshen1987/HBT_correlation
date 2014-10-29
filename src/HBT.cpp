@@ -425,8 +425,8 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
    double degen = particle_ptr[particle_id].gspin;
 
    double gammaT = surf->u0;
-   double vx = surf->u1/gammaT;
-   double vy = surf->u2/gammaT;
+   double ux = surf->u1;
+   double uy = surf->u2;
    double Tdec = surf->Tdec;
    double Pdec = surf->Pdec;
    double Edec = surf->Edec;
@@ -441,7 +441,7 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
    double pi22 = surf->pi22;
    double pi33 = surf->pi33;
 
-   double expon = (gammaT*(p0*1. - px*vx - py*vy) - mu) / Tdec;
+   double expon = ((p0*gammaT - px*ux - py*uy) - mu) / Tdec;
    double f0 = 1./(exp(expon)+sign);       //thermal equilibrium distributions
 
    //p^mu d^3sigma_mu: The plus sign is due to the fact that the DA# variables are for the covariant surface integration
@@ -452,10 +452,10 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
    double deltaf = INCLUDE_SHEAR_DELTAF*(1. - sign*f0)*Wfactor/(2.0*Tdec*Tdec*(Edec+Pdec));
 
    double dN_dyd2pTdphi;
-   if (deltaf < -1.0)  // delta f correction is too large
-      dN_dyd2pTdphi = 0.0;
-   else
-      dN_dyd2pTdphi = 1.0*degen/(8.0*(M_PI*M_PI*M_PI))*pdsigma*f0*(1+deltaf);
+   //if (deltaf < -1.0)  // delta f correction is too large
+   //   dN_dyd2pTdphi = 0.0;
+   //else
+   dN_dyd2pTdphi = 1.0*degen/(8.0*(M_PI*M_PI*M_PI))*pdsigma*f0*(1+deltaf);
    //out << "Spectral funct = " << dN_dyd2pTdphi << endl;
 
    return (dN_dyd2pTdphi);
