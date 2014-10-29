@@ -36,22 +36,25 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
    eta_s_weight = new double [eta_s_npts];
    gauss_quadrature(eta_s_npts, 1, 0.0, 0.0, 0.0, eta_s_f, eta_s, eta_s_weight);
 
+   // initialize Kphi array
+   n_Kphi = paraRdr->getVal("n_Kphi");
+   Kphi = new double [n_Kphi];
+   Kphi_weight = new double [n_Kphi];
+   gauss_quadrature(n_Kphi, 1, 0.0, 0.0, 0.0, 2*M_PI, Kphi, Kphi_weight);
+
    // initialize emission function
    Emissionfunction_length = FO_length*eta_s_npts;
-   Emissionfunction_Data = new double [Emissionfunction_length];
-   Emissionfunction_t = new double [Emissionfunction_length];
-   Emissionfunction_x = new double [Emissionfunction_length];
-   Emissionfunction_y = new double [Emissionfunction_length];
-   Emissionfunction_z = new double [Emissionfunction_length];
-   Emissionfunction_Data_CDF = new double [Emissionfunction_length];
+   emission_S_K = new Emissionfunction_data [Emissionfunction_length];
    for(int i=0; i<Emissionfunction_length; i++)
    {
-      Emissionfunction_Data[i] = 0.0;
-      Emissionfunction_t[i] = 0.0;
-      Emissionfunction_x[i] = 0.0;
-      Emissionfunction_y[i] = 0.0;
-      Emissionfunction_z[i] = 0.0;
-      Emissionfunction_Data_CDF[i] = 0.0;
+      emission_S_K[i].t = 0.0;
+      emission_S_K[i].x = 0.0;
+      emission_S_K[i].y = 0.0;
+      emission_S_K[i].z = 0.0;
+      emission_S_K[i].CDF = 0.0;
+      emission_S_K[i].data = new double [n_Kphi];
+      for(int j = 0; j < n_Kphi; j++)
+          emission_S_K[i].data[j] = 0.0;
    }
 
    INCLUDE_SHEAR_DELTAF = paraRdr->getVal("turn_on_shear");
@@ -117,35 +120,35 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
 HBT::~HBT()
 {
 
-   delete[] Emissionfunction_Data;
-   delete[] Emissionfunction_t;
-   delete[] Emissionfunction_x;
-   delete[] Emissionfunction_y;
-   delete[] Emissionfunction_z;
-   delete[] Emissionfunction_Data_CDF;
+   delete [] Kphi;
+   delete [] Kphi_weight;
 
-   delete[] q_out;
-   delete[] q_side;
-   delete[] q_long;
+   for(int i = 0; i < Emissionfunction_length; i++)
+       delete [] emission_S_K[i].data;
+   delete [] emission_S_K;
 
-   delete[] Correl_1D_out;
-   delete[] Correl_1D_side;
-   delete[] Correl_1D_long;
-   delete[] Correl_1D_out_err;
-   delete[] Correl_1D_side_err;
-   delete[] Correl_1D_long_err;
+   delete [] q_out;
+   delete [] q_side;
+   delete [] q_long;
+
+   delete [] Correl_1D_out;
+   delete [] Correl_1D_side;
+   delete [] Correl_1D_long;
+   delete [] Correl_1D_out_err;
+   delete [] Correl_1D_side_err;
+   delete [] Correl_1D_long_err;
 
    for(int i=0; i<qnpts; i++)
    {
       for(int j=0; j< qnpts; j++)
-          delete[] Correl_3D[i][j];
-      delete[] Correl_3D[i];
+          delete [] Correl_3D[i][j];
+      delete [] Correl_3D[i];
       for(int j=0; j< qnpts; j++)
-          delete[] Correl_3D_err[i][j];
-      delete[] Correl_3D_err[i];
+          delete [] Correl_3D_err[i][j];
+      delete [] Correl_3D_err[i];
    }
-   delete[] Correl_3D;
-   delete[] Correl_3D_err;
+   delete [] Correl_3D;
+   delete [] Correl_3D_err;
 
    return;
 }
@@ -177,7 +180,7 @@ void HBT::calculate_azimuthal_averaged_HBT_radii(double y)
    for(int i = 0; i < n_KT; i++)
    {
        double KT_local = KT_min + i*dKT;
-       SetEmissionData(FOsurf_ptr, y, KT_local);
+       //SetEmissionData(FOsurf_ptr, y, KT_local);
        Cal_HBTRadii_fromEmissionfunction(KT_local, 0.0, 0.0);
        results_SV << scientific << setw(18) << setprecision(8)
                   << KT_local << "   " << R_out_EM << "   " 
@@ -190,7 +193,7 @@ void HBT::calculate_azimuthal_averaged_KT_integrated_HBT_radii(double y)
 {
    cout << "Calculating "<< particle_ptr[particle_id].name << endl;
 
-   SetEmissionData(FOsurf_ptr, y);
+   //SetEmissionData(FOsurf_ptr, y);
    Cal_HBTRadii_fromEmissionfunction(0.0, 0.0, 0.0);
 }
 
@@ -225,13 +228,13 @@ void HBT::SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T, double 
 	  else
         {
            double S_p_withweight = S_p*FO_surface[j].tau*eta_s_weight[i];
-           Emissionfunction_Data[idx] = S_p_withweight; 
-           Emissionfunction_t[idx] = FO_surface[j].tau*ch_localetas;
-           Emissionfunction_x[idx] = FO_surface[j].xpt;
-           Emissionfunction_y[idx] = FO_surface[j].ypt;
-           Emissionfunction_z[idx] = FO_surface[j].tau*sh_localetas;
+           emission_S_K[idx].data[0] = S_p_withweight;
+           emission_S_K[idx].t = FO_surface[j].tau*ch_localetas;
+           emission_S_K[idx].x = FO_surface[j].xpt;
+           emission_S_K[idx].y = FO_surface[j].ypt;
+           emission_S_K[idx].z = FO_surface[j].tau*sh_localetas;
            CDF += S_p_withweight;
-           Emissionfunction_Data_CDF[idx] = CDF;
+           emission_S_K[idx].CDF = CDF;
            idx++;
         }
       }
@@ -241,180 +244,8 @@ void HBT::SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T, double 
   //normalize CDF to unity
   for(int i=0; i<Emissionfunction_length; i++)
   {
-     Emissionfunction_Data_CDF[i] = Emissionfunction_Data_CDF[i] / CDF;
+      emission_S_K[i].CDF /= CDF;
   }
-  return;
-}
-
-void HBT::SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T)
-// compute the azimuthal averaged emission function at a given pair momentum
-{
-  double tol = 1e-15;
-  double mass = particle_ptr[particle_id].mass;
-  double mT = sqrt(mass*mass + K_T*K_T);
-
-  int n_Kphi = paraRdr->getVal("n_Kphi");
-  double *Kphi = new double [n_Kphi];
-  double *Kphi_weight = new double [n_Kphi];
-  gauss_quadrature(n_Kphi, 1, 0.0, 0.0, 0.0, 2*M_PI, Kphi, Kphi_weight);
-
-  double *K_x = new double [n_Kphi];
-  double *K_y = new double [n_Kphi];
-  for(int i = 0; i < n_Kphi; i++)
-  {
-      K_x[i] = K_T*cos(Kphi[i]);
-      K_y[i] = K_T*sin(Kphi[i]);
-  }
-
-  int idx = 0;
-  double CDF = 0.0;
-  for(int i = 0; i < eta_s_npts; i++)
-  {
-      double local_eta_s = eta_s[i];
-      double ch_localetas = cosh(local_eta_s);
-      double sh_localetas = sinh(local_eta_s);
-
-      double K_0 = mT*cosh(K_rap - local_eta_s);
-      double K_z = mT*sinh(K_rap - local_eta_s);
-
-      for (int j = 0; j < FO_length; j++)
-	{
-	  double S_p = 0.0e0;
-        for(int k = 0; k < n_Kphi; k++)
-        {
-           S_p += Emissionfunction(K_0, K_x[k], K_y[k], K_z, &FO_surface[j])*Kphi_weight[k];
-        }
-        if (flag_neg == 1 && S_p < tol)
-        {
-           S_p = 0.0e0;
-        }
-	  else
-        {
-           double S_p_withweight = S_p*FO_surface[j].tau*eta_s_weight[i];
-           Emissionfunction_Data[idx] = S_p_withweight; 
-           Emissionfunction_t[idx] = FO_surface[j].tau*ch_localetas;
-           Emissionfunction_x[idx] = FO_surface[j].xpt;
-           Emissionfunction_y[idx] = FO_surface[j].ypt;
-           Emissionfunction_z[idx] = FO_surface[j].tau*sh_localetas;
-           CDF += S_p_withweight;
-           Emissionfunction_Data_CDF[idx] = CDF;
-           idx++;
-        }
-      }
-  }
-  Emissionfunction_length = idx;
-
-  //normalize CDF to unity
-  for(int i=0; i<Emissionfunction_length; i++)
-  {
-     Emissionfunction_Data_CDF[i] = Emissionfunction_Data_CDF[i] / CDF;
-  }
-
-  delete [] Kphi;
-  delete [] Kphi_weight;
-  delete [] K_x;
-  delete [] K_y;
-
-  return;
-}
-
-void HBT::SetEmissionData(FO_surf* FO_surface, double K_rap)
-// compute the azimuthal averaged K_T-integrated emission function
-{
-  double tol = 1e-15;
-  double mass = particle_ptr[particle_id].mass;
-
-  int n_KT = paraRdr->getVal("n_KT");
-  double KT_min = paraRdr->getVal("KT_min");
-  double KT_max = paraRdr->getVal("KT_max");
-  double *KT_local = new double [n_KT];
-  double *KT_local_weight = new double [n_KT];
-  gauss_quadrature(n_KT, 1, 0.0, 0.0, KT_min, KT_max, KT_local, KT_local_weight);
-
-  int n_Kphi = paraRdr->getVal("n_Kphi");
-  double *Kphi = new double [n_Kphi];
-  double *Kphi_weight = new double [n_Kphi];
-  gauss_quadrature(n_Kphi, 1, 0.0, 0.0, 0.0, 2*M_PI, Kphi, Kphi_weight);
-
-  double *mT = new double [n_KT];
-  for(int i = 0; i < n_KT; i++)
-     mT[i] = sqrt(mass*mass + KT_local[i]*KT_local[i]);
-
-  double **K_x = new double* [n_KT];
-  double **K_y = new double* [n_KT];
-  for(int i = 0; i < n_KT; i++)
-  {
-      K_x[i] = new double [n_Kphi];
-      K_y[i] = new double [n_Kphi];
-      for(int j = 0; j < n_Kphi; j++)
-      {
-          K_x[i][j] = KT_local[i]*cos(Kphi[j]);
-          K_y[i][j] = KT_local[i]*sin(Kphi[j]);
-      }
-  }
-
-  int idx = 0;
-  double CDF = 0.0;
-  for(int i = 0; i < eta_s_npts; i++)
-  {
-      double local_eta_s = eta_s[i];
-      double ch_localetas = cosh(local_eta_s);
-      double sh_localetas = sinh(local_eta_s);
-
-      double cosh_y_minus_etas = cosh(K_rap - local_eta_s);
-      double sinh_y_minus_etas = sinh(K_rap - local_eta_s);
-
-      for (int j = 0; j < FO_length; j++)
-	{
-	  double S_p = 0.0e0;
-        for(int k = 0; k < n_KT; k++)
-        {
-           double K_0 = mT[k]*cosh_y_minus_etas;
-           double K_z = mT[k]*sinh_y_minus_etas;
-           double temp_dNpTdpTdphi = 0.0e0;
-           for(int l = 0; l < n_Kphi; l++)
-              temp_dNpTdpTdphi += Emissionfunction(K_0, K_x[k][l], K_y[k][l], K_z, &FO_surface[j])*Kphi_weight[l];
-           S_p += temp_dNpTdpTdphi*KT_local[k]*KT_local_weight[k];
-        }
-        if (flag_neg == 1 && S_p < tol)
-        {
-           S_p = 0.0e0;
-        }
-	  else
-        {
-           double S_p_withweight = S_p*FO_surface[j].tau*eta_s_weight[i];
-           Emissionfunction_Data[idx] = S_p_withweight; 
-           Emissionfunction_t[idx] = FO_surface[j].tau*ch_localetas;
-           Emissionfunction_x[idx] = FO_surface[j].xpt;
-           Emissionfunction_y[idx] = FO_surface[j].ypt;
-           Emissionfunction_z[idx] = FO_surface[j].tau*sh_localetas;
-           CDF += S_p_withweight;
-           Emissionfunction_Data_CDF[idx] = CDF;
-           idx++;
-        }
-      }
-  }
-  Emissionfunction_length = idx;
-
-  //normalize CDF to unity
-  for(int i=0; i<Emissionfunction_length; i++)
-  {
-     Emissionfunction_Data_CDF[i] = Emissionfunction_Data_CDF[i] / CDF;
-  }
-
-  delete [] KT_local;
-  delete [] KT_local_weight;
-  delete [] Kphi;
-  delete [] Kphi_weight;
-  delete [] mT;
-  for(int i = 0; i < n_KT; i++)
-  {
-      delete [] K_x[i];
-      delete [] K_y[i];
-  }
-  delete [] K_x;
-  delete [] K_y;
-
   return;
 }
 
@@ -469,11 +300,11 @@ void HBT::Cal_HBTRadii_fromEmissionfunction(double K_T, double K_phi, double K_y
 
   for(int i=0; i < Emissionfunction_length; i++)
   {
-     double S_p = Emissionfunction_Data[i];
-     double tpt = Emissionfunction_t[i];
-     double xpt = Emissionfunction_x[i];
-     double ypt = Emissionfunction_y[i];
-     double zpt = Emissionfunction_z[i];
+     double S_p = emission_S_K[i].data[0];
+     double tpt = emission_S_K[i].t;
+     double xpt = emission_S_K[i].x;
+     double ypt = emission_S_K[i].y;
+     double zpt = emission_S_K[i].z;
  
      for(int ii=0; ii<2; ii++) // assuming reflection symmetry in eta_s
      {
@@ -625,11 +456,11 @@ void HBT::Cal_correlationfunction_1D()
 
          for(int k = 0; k < Emissionfunction_length; k++)
          {
-            double ss  = Emissionfunction_Data[k];
-            double tpt = Emissionfunction_t[k];
-            double xpt = Emissionfunction_x[k];
-            double ypt = Emissionfunction_y[k];
-            double zpt = Emissionfunction_z[k];
+            double ss  = emission_S_K[k].data[0];
+            double tpt = emission_S_K[k].t;
+            double xpt = emission_S_K[k].x;
+            double ypt = emission_S_K[k].y;
+            double zpt = emission_S_K[k].z;
             
             for(int ii=0; ii<2; ii++)
             {
@@ -697,11 +528,11 @@ void HBT::Cal_correlationfunction_3D()
             
             for(int m = 0; m < Emissionfunction_length; m++)
             {
-               double ss = Emissionfunction_Data[m];
-               double tpt = Emissionfunction_t[m];
-               double xpt = Emissionfunction_x[m];
-               double ypt = Emissionfunction_y[m];
-               double zpt = Emissionfunction_z[m];
+               double ss = emission_S_K[m].data[0];
+               double tpt = emission_S_K[m].t;
+               double xpt = emission_S_K[m].x;
+               double ypt = emission_S_K[m].y;
+               double zpt = emission_S_K[m].z;
 
                for(int ii=0; ii<2; ii++)
                {
@@ -722,7 +553,7 @@ void HBT::Cal_correlationfunction_3D()
    }
    return;
 }
-
+/*
 void HBT::Cal_correlationfunction_1D_MC()
 {
    double K_y = 0.0;
@@ -943,6 +774,7 @@ void HBT::Cal_correlationfunction_3D_MC()
       }
    }
 }
+*/
 
 int HBT::binary_search(double* dataset, int data_length, double value)
 {

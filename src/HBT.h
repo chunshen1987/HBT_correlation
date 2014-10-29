@@ -25,6 +25,16 @@
 
 using namespace std;
 
+struct Emissionfunction_data
+{
+   double x;
+   double y;
+   double z;
+   double t;
+   double *data;
+   double CDF;
+};
+
 struct Correlationfunction3D_data
 {
   size_t data_length;
@@ -69,14 +79,13 @@ class HBT
 
       int INCLUDE_SHEAR_DELTAF, INCLUDE_BULK_DELTAF;
 
+      int n_Kphi;
+      double *Kphi, *Kphi_weight;
+
+      Emissionfunction_data* emission_S_K;
+
       // Emission function
       int Emissionfunction_length;  // length of the emission function array
-      double* Emissionfunction_Data;
-      double* Emissionfunction_t;
-      double* Emissionfunction_x;
-      double* Emissionfunction_y;
-      double* Emissionfunction_z;
-      double* Emissionfunction_Data_CDF;
 
       int flag_neg;
       double spectra;
@@ -130,8 +139,6 @@ class HBT
       double get_Ros_Correl() {return(R_os_Correl);};
       double get_Ros_Correl_err() {return(R_os_Correl_err);};
 
-      void SetEmissionData(FO_surf* FO_surface, double K_rap);
-      void SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T);
       void SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T, double K_phi);
 
       double Emissionfunction(double p0, double px, double py, double pz, FO_surf* surf);
@@ -143,8 +150,8 @@ class HBT
 
       void Cal_correlationfunction_1D();
       void Cal_correlationfunction_3D();
-      void Cal_correlationfunction_1D_MC();
-      void Cal_correlationfunction_3D_MC();
+      //void Cal_correlationfunction_1D_MC();
+      //void Cal_correlationfunction_3D_MC();
       int binary_search(double* dataset, int data_length, double value);
 
       void Output_Correlationfunction_1D();
