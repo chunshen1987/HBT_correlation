@@ -80,12 +80,7 @@ int main(int argc, char *argv[])
    //HBT calculations begins ...
    int particle_idx=1;  //for pion+
    HBT HBT_hadron(path, paraRdr, particle, particle_idx, FOsurf_ptr, FO_length);
-   HBT_hadron.calculate_azimuthal_dependent_HBT_radii(0.0, 0.0, 0.0);
-   HBT_hadron.calculate_azimuthal_dependent_HBT_radii(0.2, 0.0, 0.0);
-   HBT_hadron.calculate_azimuthal_dependent_HBT_radii(0.4, 0.0, 0.0);
-   HBT_hadron.calculate_azimuthal_dependent_HBT_radii(0.6, 0.0, 0.0);
-   HBT_hadron.calculate_azimuthal_dependent_HBT_radii(0.8, 0.0, 0.0);
-   HBT_hadron.calculate_azimuthal_dependent_HBT_radii(1.0, 0.0, 0.0);
+   HBT_hadron.calculate_azimuthal_averaged_HBT_radii(0.0);
    /*
    cout << "Calculating "<< particle[particle_idx].name << endl;
    

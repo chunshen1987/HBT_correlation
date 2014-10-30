@@ -79,6 +79,8 @@ class HBT
 
       int INCLUDE_SHEAR_DELTAF, INCLUDE_BULK_DELTAF;
 
+      int azimuthal_flag;
+
       int n_Kphi;
       double *Kphi, *Kphi_weight;
 
@@ -88,7 +90,6 @@ class HBT
       int Emissionfunction_length;  // length of the emission function array
 
       int flag_neg;
-      double spectra;
 
       int qnpts;
       double *q_out, *q_side, *q_long;
@@ -139,22 +140,23 @@ class HBT
       double get_Ros_Correl() {return(R_os_Correl);};
       double get_Ros_Correl_err() {return(R_os_Correl_err);};
 
-      void SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T, double K_phi);
+      void SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T);
 
       double Emissionfunction(double p0, double px, double py, double pz, FO_surf* surf);
 
-      void Cal_HBTRadii_fromEmissionfunction(double K_T, double K_phi, double K_y);
-      void calculate_azimuthal_dependent_HBT_radii(double p_T, double p_phi, double y);
+      void Cal_HBTRadii_fromEmissionfunction(double K_T, double K_y);
+      void calculate_azimuthal_dependent_HBT_radii(double p_T, double y);
       void calculate_azimuthal_averaged_HBT_radii(double y);
       void calculate_azimuthal_averaged_KT_integrated_HBT_radii(double y);
 
       void Cal_correlationfunction_1D();
+      void Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y);
       void Cal_correlationfunction_3D();
       //void Cal_correlationfunction_1D_MC();
       //void Cal_correlationfunction_3D_MC();
       int binary_search(double* dataset, int data_length, double value);
 
-      void Output_Correlationfunction_1D();
+      void Output_Correlationfunction_1D(double K_T);
       void Output_Correlationfunction_3D();
 
       void Fit_Correlationfunction1D();
