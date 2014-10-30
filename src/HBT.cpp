@@ -181,9 +181,11 @@ void HBT::calculate_azimuthal_averaged_HBT_radii(double y)
    {
        double KT_local = KT_min + i*dKT;
        SetEmissionData(FOsurf_ptr, y, KT_local);
-       //Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
-       //Output_Correlationfunction_1D(KT_local);
-       Cal_azimuthal_averaged_correlationfunction_3D(KT_local, y);
+       Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
+       Output_Correlationfunction_1D(KT_local);
+       find_minimum_chisq_correlationfunction_1D();
+       //Fit_Correlationfunction1D();
+       //Cal_azimuthal_averaged_correlationfunction_3D(KT_local, y);
    }
 }
 
@@ -900,11 +902,61 @@ void HBT::Output_Correlationfunction_3D()
    return;
 }
 
+void HBT::find_minimum_chisq_correlationfunction_1D()
+{
+    double lambda, R_HBT;
+    double *q_local = new double [qnpts];
+    double *Correl_local = new double [qnpts];
+    double *sigma_k_prime = new double [qnpts];
+    // 0 for out, 1 for side, and 2 for long
+    for(int idir = 0; idir < 3; idir++)
+    {
+        double X0_coeff = 0.0;
+        double X2_coeff = 0.0;
+        double Y0_coeff = 0.0;
+        double Y2_coeff = 0.0;
+        double Y4_coeff = 0.0;
+        for(int iq = 0; iq < qnpts; iq++)
+        {
+           if(idir == 0)
+           {
+               q_local[iq] = q_out[iq];
+               Correl_local[iq] = Correl_1D_out[iq];
+               sigma_k_prime[iq] = Correl_1D_out_err[iq]/Correl_1D_out[iq];
+           }
+           else if (idir == 1)
+           {
+               q_local[iq] = q_side[iq];
+               Correl_local[iq] = Correl_1D_side[iq];
+               sigma_k_prime[iq] = Correl_1D_side_err[iq]/Correl_1D_side[iq];
+           }
+           else if (idir == 2)
+           {
+               q_local[iq] = q_long[iq];
+               Correl_local[iq] = Correl_1D_long[iq];
+               sigma_k_prime[iq] = Correl_1D_long_err[iq]/Correl_1D_long[iq];
+           }
+           double denorm = sigma_k_prime[iq]*sigma_k_prime[iq];
+           double q_sq = q_local[iq]*q_local[iq];
+           X0_coeff += log(Correl_local[iq])/denorm;
+           X2_coeff += q_sq*log(Correl_local[iq])/denorm;
+           Y0_coeff += 1./denorm;
+           Y2_coeff += q_sq/denorm;
+           Y4_coeff += q_sq*q_sq/denorm;
+        }
+        lambda = exp((X2_coeff*Y2_coeff - X0_coeff*Y4_coeff)/(Y2_coeff*Y2_coeff - Y0_coeff*Y4_coeff));
+        R_HBT = sqrt((X2_coeff*Y0_coeff - X0_coeff*Y2_coeff)/(Y2_coeff*Y2_coeff - Y0_coeff*Y4_coeff))*hbarC;
+        cout << "lambda = " << lambda << ", R = " << R_HBT << " fm." << endl;
+    }
 
+    delete [] q_local;
+    delete [] Correl_local;
+    delete [] sigma_k_prime;
+}
 
 //*********************************************************************
 // Functions used for multidimension fit
-void HBT::Fit_Correlationfunction1D()
+void HBT::Fit_Correlationfunction1D_gsl()
 {
   const int data_length = qnpts;  // # of points
   const size_t n_para = 2;  // # of parameters
@@ -928,7 +980,7 @@ void HBT::Fit_Correlationfunction1D()
   {
      Correlfun1D_data.q[i] = q_out[i];
      // This sets up the data to be fitted, with gaussian noise added
-     //Correlfun1D_data.y[i] = 1.0*exp(-10*q_out[i]*q_out[i]) +gsl_ran_gaussian(rng_ptr, error);
+     //Correlfun1D_data.y[i] = 1.0*exp(-10*q_out[i]*q_out[i]);
      Correlfun1D_data.y[i] = Correl_1D_out[i];
      Correlfun1D_data.sigma[i] = Correl_1D_out_err[i];
      //cout << Correlfun1D_data.q[i] << "  " << Correlfun1D_data.y[i] << "  " << Correlfun1D_data.sigma[i] << endl;
@@ -953,7 +1005,7 @@ void HBT::Fit_Correlationfunction1D()
   gsl_multifit_fdfsolver_set (solver_ptr, &target_func, &xvec_ptr.vector);
 
   size_t iteration = 0;         // initialize iteration counter
-  print_fit_state_1D (iteration, solver_ptr);
+  print_fit_state_1D_gsl (iteration, solver_ptr);
   int status;  		// return value from gsl function calls (e.g., error)
   do
   {
@@ -966,7 +1018,7 @@ void HBT::Fit_Correlationfunction1D()
       cout << "status = " << gsl_strerror (status) << endl;
 
       // customized routine to print out current parameters
-      print_fit_state_1D (iteration, solver_ptr);
+      print_fit_state_1D_gsl (iteration, solver_ptr);
 
       if (status)    // check for a nonzero status code
       {
@@ -1029,7 +1081,7 @@ void HBT::Fit_Correlationfunction1D()
   return;
 }
 
-void HBT::Fit_Correlationfunction3D()
+void HBT::Fit_Correlationfunction3D_gsl()
 {
   const size_t data_length = qnpts*qnpts*qnpts;  // # of points
   const size_t n_para = 4;  // # of parameters
@@ -1090,7 +1142,7 @@ void HBT::Fit_Correlationfunction3D()
   gsl_multifit_fdfsolver_set (solver_ptr, &target_func, &xvec_ptr.vector);
 
   size_t iteration = 0;         // initialize iteration counter
-  print_fit_state_3D (iteration, solver_ptr);
+  print_fit_state_3D_gsl (iteration, solver_ptr);
   int status;  		// return value from gsl function calls (e.g., error)
   do
   {
@@ -1103,7 +1155,7 @@ void HBT::Fit_Correlationfunction3D()
       cout << "status = " << gsl_strerror (status) << endl;
 
       // customized routine to print out current parameters
-      print_fit_state_3D (iteration, solver_ptr);
+      print_fit_state_3D_gsl (iteration, solver_ptr);
 
       if (status)    // check for a nonzero status code
       {
@@ -1183,7 +1235,7 @@ void HBT::Fit_Correlationfunction3D()
   return;
 }
 
-void HBT::Fit_Correlationfunction3D_withlambda()
+void HBT::Fit_Correlationfunction3D_withlambda_gsl()
 {
   const size_t data_length = qnpts*qnpts*qnpts;  // # of points
   const size_t n_para = 5;  // # of parameters
@@ -1243,7 +1295,7 @@ void HBT::Fit_Correlationfunction3D_withlambda()
   gsl_multifit_fdfsolver_set (solver_ptr, &target_func, &xvec_ptr.vector);
 
   size_t iteration = 0;         // initialize iteration counter
-  print_fit_state_3D (iteration, solver_ptr);
+  print_fit_state_3D_gsl (iteration, solver_ptr);
   int status;  		// return value from gsl function calls (e.g., error)
   do
   {
@@ -1256,7 +1308,7 @@ void HBT::Fit_Correlationfunction3D_withlambda()
       cout << "status = " << gsl_strerror (status) << endl;
 
       // customized routine to print out current parameters
-      print_fit_state_3D (iteration, solver_ptr);
+      print_fit_state_3D_gsl (iteration, solver_ptr);
 
       if (status)    // check for a nonzero status code
       {
@@ -1343,7 +1395,7 @@ void HBT::Fit_Correlationfunction3D_withlambda()
 // 1D case
 //*********************************************************************
 //  Simple function to print results of each iteration in nice format
-int HBT::print_fit_state_1D (size_t iteration, gsl_multifit_fdfsolver * solver_ptr)
+int HBT::print_fit_state_1D_gsl (size_t iteration, gsl_multifit_fdfsolver * solver_ptr)
 {
   cout.setf (ios::fixed, ios::floatfield);	// output in fixed format
   cout.precision (5);		// digits in doubles
@@ -1430,7 +1482,7 @@ int Fittarget_correlfun1D_fdf (const gsl_vector* xvec_ptr, void *params_ptr, gsl
 // 3D case
 //*********************************************************************
 //  Simple function to print results of each iteration in nice format
-int HBT::print_fit_state_3D (size_t iteration, gsl_multifit_fdfsolver * solver_ptr)
+int HBT::print_fit_state_3D_gsl (size_t iteration, gsl_multifit_fdfsolver * solver_ptr)
 {
   cout.setf (ios::fixed, ios::floatfield);	// output in fixed format
   cout.precision (5);		// digits in doubles
@@ -1448,7 +1500,7 @@ int HBT::print_fit_state_3D (size_t iteration, gsl_multifit_fdfsolver * solver_p
   return 0;
 }
 //  Simple function to print results of each iteration in nice format
-int HBT::print_fit_state_3D_withlambda (size_t iteration, gsl_multifit_fdfsolver * solver_ptr)
+int HBT::print_fit_state_3D_withlambda_gsl (size_t iteration, gsl_multifit_fdfsolver * solver_ptr)
 {
   cout.setf (ios::fixed, ios::floatfield);	// output in fixed format
   cout.precision (5);		// digits in doubles

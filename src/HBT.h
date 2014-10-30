@@ -160,12 +160,15 @@ class HBT
       void Output_Correlationfunction_1D(double K_T);
       void Output_Correlationfunction_3D();
 
-      void Fit_Correlationfunction1D();
-      void Fit_Correlationfunction3D();
-      void Fit_Correlationfunction3D_withlambda();
-      int print_fit_state_1D (size_t iteration, gsl_multifit_fdfsolver * solver_ptr);
-      int print_fit_state_3D (size_t iteration, gsl_multifit_fdfsolver * solver_ptr);
-      int print_fit_state_3D_withlambda (size_t iteration, gsl_multifit_fdfsolver * solver_ptr);
+      void find_minimum_chisq_correlationfunction_1D();
+
+      // functions to fit correlation function with gsl routines
+      void Fit_Correlationfunction1D_gsl();
+      void Fit_Correlationfunction3D_gsl();
+      void Fit_Correlationfunction3D_withlambda_gsl();
+      int print_fit_state_1D_gsl (size_t iteration, gsl_multifit_fdfsolver * solver_ptr);
+      int print_fit_state_3D_gsl (size_t iteration, gsl_multifit_fdfsolver * solver_ptr);
+      int print_fit_state_3D_withlambda_gsl (size_t iteration, gsl_multifit_fdfsolver * solver_ptr);
       inline double get_fit_results(int i, gsl_multifit_fdfsolver * solver_ptr);
       inline double get_fit_err (int i, gsl_matrix * covariance_ptr);
 

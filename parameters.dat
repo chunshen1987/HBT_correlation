@@ -9,14 +9,14 @@ azimuthal_flag = 0                # 0: compute the azimuthal averaged HBT radii
 kT_differenitial_flag = 0         # 0: integrate the pair momentum k_T over the given kT range for correlation function
                                   # 1: compute the correlation function at each specifiec kT point
 
-n_KT = 30                         # number of the pair momentum k_T to calculate
-KT_min = 0.2                      # minimum value of the pair momentum k_T (GeV)
-KT_max = 0.8                      # maximum value of the pair momentum k_T (GeV)
+n_KT = 5                          # number of the pair momentum k_T to calculate
+KT_min = 0.0                      # minimum value of the pair momentum k_T (GeV)
+KT_max = 1.0                      # maximum value of the pair momentum k_T (GeV)
 n_Kphi = 48                       # number of the azimuthal angles for the pair momentum k_T (range is assumed to be from 0 to 2*pi)
 
 qnpts = 20                        # number of points for momentum q (difference of the pair momentum) for correlaction function
 delta_q = 0.01                    # grid spacing for momentum q in particle correlation function (GeV)
-init_q = 0.005                    # minimum value for momentum q (GeV)
+init_q = 0.0                      # minimum value for momentum q (GeV)
 
 eta_s_npts = 40                   # number of eta_s slices for numerical integration for boost-invariant freeze-out surface
 eta_s_f = 4.0                     # maximum value for the eta_s integration, from - eta_s_f to eta_s_f
