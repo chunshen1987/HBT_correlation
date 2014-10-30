@@ -150,8 +150,9 @@ class HBT
       void calculate_azimuthal_averaged_KT_integrated_HBT_radii(double y);
 
       void Cal_correlationfunction_1D();
-      void Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y);
       void Cal_correlationfunction_3D();
+      void Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y);
+      void Cal_azimuthal_averaged_correlationfunction_3D(double K_T, double K_y);
       //void Cal_correlationfunction_1D_MC();
       //void Cal_correlationfunction_3D_MC();
       int binary_search(double* dataset, int data_length, double value);
