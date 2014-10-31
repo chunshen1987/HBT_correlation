@@ -184,9 +184,9 @@ void HBT::calculate_azimuthal_averaged_HBT_radii(double y)
    for(int i = 0; i < n_KT; i++)
    {
        double KT_local = KT_min + i*dKT;
-       //SetEmissionData(FOsurf_ptr, y, KT_local);
-       //Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
-       //Output_Correlationfunction_1D(KT_local);
+       SetEmissionData(FOsurf_ptr, y, KT_local);
+       Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
+       Output_Correlationfunction_1D(KT_local);
        find_minimum_chisq_correlationfunction_1D();
        //find_minimum_chisq_correlationfunction_3D();
        //Fit_Correlationfunction1D();
@@ -913,6 +913,7 @@ void HBT::find_minimum_chisq_correlationfunction_1D()
     double q_local;
     double Correl_local;
     double sigma_k_prime;
+    double chi_sq;
     // 0 for out, 1 for side, and 2 for long
     for(int idir = 0; idir < 3; idir++)
     {
@@ -951,7 +952,33 @@ void HBT::find_minimum_chisq_correlationfunction_1D()
         }
         lambda = exp((X2_coeff*Y2_coeff - X0_coeff*Y4_coeff)/(Y2_coeff*Y2_coeff - Y0_coeff*Y4_coeff));
         R_HBT = sqrt((X2_coeff*Y0_coeff - X0_coeff*Y2_coeff)/(Y2_coeff*Y2_coeff - Y0_coeff*Y4_coeff))*hbarC;
+        
+        // compute chi square
+        chi_sq = 0.0;
+        for(int iq = 0; iq < qnpts; iq++)
+        {
+           if(idir == 0)
+           {
+               q_local = q_out[iq];
+               Correl_local = Correl_1D_out[iq];
+               sigma_k_prime = Correl_1D_out_err[iq]/Correl_local;
+           }
+           else if (idir == 1)
+           {
+               q_local = q_side[iq];
+               Correl_local = Correl_1D_side[iq];
+               sigma_k_prime = Correl_1D_side_err[iq]/Correl_local;
+           }
+           else if (idir == 2)
+           {
+               q_local = q_long[iq];
+               Correl_local = Correl_1D_long[iq];
+               sigma_k_prime = Correl_1D_long_err[iq]/Correl_local;
+           }
+           chi_sq += pow((log(Correl_local) - log(lambda) + R_HBT*R_HBT/hbarC/hbarC*q_local*q_local), 2)/sigma_k_prime/sigma_k_prime;
+        }
         cout << "lambda = " << lambda << ", R = " << R_HBT << " fm." << endl;
+        cout << "chi_sq/d.o.f = " << chi_sq/qnpts << endl;
     }
 }
 
@@ -1048,6 +1075,32 @@ void HBT::find_minimum_chisq_correlationfunction_3D()
     cout << "lambda = " << lambda << endl;
     cout << "R_o = " << R_o << " fm, R_s = " << R_s << " fm, R_l = " << R_l << " fm" << endl;
     cout << "R_os = " << R_os << " fm, R_ol = " << R_ol << " fm, R_sl = " << R_sl << " fm." << endl;
+
+    double chi_sq = 0.0;
+    for(int iqout = 0; iqout < qnpts; iqout++)
+    {
+        double q_out_local = q_out[iqout];
+        for(int iqside = 0; iqside < qnpts; iqside++)
+        {
+            double q_side_local = q_side[iqside];
+            for(int iqlong = 0; iqlong < qnpts; iqlong++)
+            {
+                double q_long_local = q_long[iqlong];
+                double correl_local = Correl_3D[iqout][iqside][iqlong];
+                double sigma_k_prime = Correl_3D_err[iqout][iqside][iqlong]/correl_local;
+
+                chi_sq += pow((log(correl_local) - results[0] 
+                               + results[1]*q_out_local*q_out_local 
+                               + results[2]*q_side_local*q_side_local
+                               + results[3]*q_long_local*q_long_local
+                               + results[4]*q_out_local*q_side_local
+                               + results[5]*q_out_local*q_long_local
+                               + results[6]*q_side_local*q_long_local), 2)
+                          /sigma_k_prime/sigma_k_prime;
+            }
+        }
+    }
+    cout << "chi_sq/d.o.f = " << chi_sq/pow(qnpts, 3) << endl;
 
     gsl_matrix_free (T_gsl);
     gsl_matrix_free (T_inverse_gsl);
