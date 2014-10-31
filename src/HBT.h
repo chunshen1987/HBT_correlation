@@ -161,6 +161,7 @@ class HBT
       void Output_Correlationfunction_3D();
 
       void find_minimum_chisq_correlationfunction_1D();
+      void find_minimum_chisq_correlationfunction_3D();
 
       // functions to fit correlation function with gsl routines
       void Fit_Correlationfunction1D_gsl();

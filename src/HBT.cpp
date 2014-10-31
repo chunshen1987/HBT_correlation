@@ -13,6 +13,10 @@
 #include <gsl/gsl_blas.h>           // gsl linear algebra stuff
 #include <gsl/gsl_multifit_nlin.h>  // gsl multidimensional fitting
 
+#include <gsl/gsl_matrix.h>
+#include <gsl/gsl_linalg.h>
+#include <gsl/gsl_cblas.h>
+
 #include "HBT.h"
 #include "arsenal.h"
 #include "ParameterReader.h"
@@ -180,10 +184,11 @@ void HBT::calculate_azimuthal_averaged_HBT_radii(double y)
    for(int i = 0; i < n_KT; i++)
    {
        double KT_local = KT_min + i*dKT;
-       SetEmissionData(FOsurf_ptr, y, KT_local);
-       Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
-       Output_Correlationfunction_1D(KT_local);
+       //SetEmissionData(FOsurf_ptr, y, KT_local);
+       //Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
+       //Output_Correlationfunction_1D(KT_local);
        find_minimum_chisq_correlationfunction_1D();
+       //find_minimum_chisq_correlationfunction_3D();
        //Fit_Correlationfunction1D();
        //Cal_azimuthal_averaged_correlationfunction_3D(KT_local, y);
    }
@@ -905,9 +910,9 @@ void HBT::Output_Correlationfunction_3D()
 void HBT::find_minimum_chisq_correlationfunction_1D()
 {
     double lambda, R_HBT;
-    double *q_local = new double [qnpts];
-    double *Correl_local = new double [qnpts];
-    double *sigma_k_prime = new double [qnpts];
+    double q_local;
+    double Correl_local;
+    double sigma_k_prime;
     // 0 for out, 1 for side, and 2 for long
     for(int idir = 0; idir < 3; idir++)
     {
@@ -920,26 +925,26 @@ void HBT::find_minimum_chisq_correlationfunction_1D()
         {
            if(idir == 0)
            {
-               q_local[iq] = q_out[iq];
-               Correl_local[iq] = Correl_1D_out[iq];
-               sigma_k_prime[iq] = Correl_1D_out_err[iq]/Correl_1D_out[iq];
+               q_local = q_out[iq];
+               Correl_local = Correl_1D_out[iq];
+               sigma_k_prime = Correl_1D_out_err[iq]/Correl_local;
            }
            else if (idir == 1)
            {
-               q_local[iq] = q_side[iq];
-               Correl_local[iq] = Correl_1D_side[iq];
-               sigma_k_prime[iq] = Correl_1D_side_err[iq]/Correl_1D_side[iq];
+               q_local = q_side[iq];
+               Correl_local = Correl_1D_side[iq];
+               sigma_k_prime = Correl_1D_side_err[iq]/Correl_local;
            }
            else if (idir == 2)
            {
-               q_local[iq] = q_long[iq];
-               Correl_local[iq] = Correl_1D_long[iq];
-               sigma_k_prime[iq] = Correl_1D_long_err[iq]/Correl_1D_long[iq];
+               q_local = q_long[iq];
+               Correl_local = Correl_1D_long[iq];
+               sigma_k_prime = Correl_1D_long_err[iq]/Correl_local;
            }
-           double denorm = sigma_k_prime[iq]*sigma_k_prime[iq];
-           double q_sq = q_local[iq]*q_local[iq];
-           X0_coeff += log(Correl_local[iq])/denorm;
-           X2_coeff += q_sq*log(Correl_local[iq])/denorm;
+           double denorm = sigma_k_prime*sigma_k_prime;
+           double q_sq = q_local*q_local;
+           X0_coeff += log(Correl_local)/denorm;
+           X2_coeff += q_sq*log(Correl_local)/denorm;
            Y0_coeff += 1./denorm;
            Y2_coeff += q_sq/denorm;
            Y4_coeff += q_sq*q_sq/denorm;
@@ -948,11 +953,118 @@ void HBT::find_minimum_chisq_correlationfunction_1D()
         R_HBT = sqrt((X2_coeff*Y0_coeff - X0_coeff*Y2_coeff)/(Y2_coeff*Y2_coeff - Y0_coeff*Y4_coeff))*hbarC;
         cout << "lambda = " << lambda << ", R = " << R_HBT << " fm." << endl;
     }
-
-    delete [] q_local;
-    delete [] Correl_local;
-    delete [] sigma_k_prime;
 }
+
+void HBT::find_minimum_chisq_correlationfunction_3D()
+{
+    double lambda, R_o, R_s, R_l, R_os, R_ol, R_sl;
+    int dim = 7;
+    int s_gsl;
+
+    double *V = new double [dim];
+    double *qweight = new double [dim];
+    double **T = new double* [dim];
+    for(int i = 0; i < dim; i++)
+    {
+        V[i] = 0.0;
+        T[i] = new double [dim];
+        for(int j = 0; j < dim; j++)
+            T[i][j] = 0.0;
+    }
+
+    gsl_matrix * T_gsl = gsl_matrix_alloc (dim, dim);
+    gsl_matrix * T_inverse_gsl = gsl_matrix_alloc (dim, dim);
+    gsl_permutation * perm = gsl_permutation_alloc (dim);
+
+    for(int iqout = 0; iqout < qnpts; iqout++)
+    {
+        double q_out_local = q_out[iqout];
+        for(int iqside = 0; iqside < qnpts; iqside++)
+        {
+            double q_side_local = q_side[iqside];
+            for(int iqlong = 0; iqlong < qnpts; iqlong++)
+            {
+                double q_long_local = q_long[iqlong];
+                double correl_local = Correl_3D[iqout][iqside][iqlong];
+                double sigma_k_prime = Correl_3D_err[iqout][iqside][iqlong]/correl_local;
+                
+                double inv_sigma_k_prime_sq = 1./sigma_k_prime*sigma_k_prime;
+                double log_correl_over_sigma_sq = log(correl_local)*inv_sigma_k_prime_sq;
+
+                qweight[0] = - 1.0;
+                qweight[1] = q_out_local*q_out_local;
+                qweight[2] = q_side_local*q_side_local;
+                qweight[3] = q_long_local*q_long_local;
+                qweight[4] = q_out_local*q_side_local;
+                qweight[5] = q_out_local*q_long_local;
+                qweight[6] = q_side_local*q_long_local;
+
+                for(int ij = 0; ij < 7; ij++)
+                {
+                    V[ij] += qweight[ij]*log_correl_over_sigma_sq;
+                    T[0][ij] += qweight[ij]*inv_sigma_k_prime_sq;
+                    T[ij][0] += qweight[ij]*inv_sigma_k_prime_sq;
+                }
+
+                for(int ij = 1; ij < 7; ij++)
+                {
+                    for(int lm = 1; lm < 7; lm++)
+                        T[ij][lm] += -qweight[ij]*qweight[lm]*inv_sigma_k_prime_sq;
+                }
+            }
+        }
+    }
+    for(int i = 0; i < dim; i++)
+        for(int j = 0; j < dim; j++)
+            gsl_matrix_set(T_gsl, i, j, T[i][j]);
+
+    // Make LU decomposition of matrix T_gsl
+    gsl_linalg_LU_decomp (T_gsl, perm, &s_gsl);
+    // Invert the matrix m
+    gsl_linalg_LU_invert (T_gsl, perm, T_inverse_gsl);
+
+    double **T_inverse = new double* [dim];
+    for(int i = 0; i < dim; i++)
+    {
+        T_inverse[i] = new double [dim];
+        for(int j = 0; j < dim; j++)
+            T_inverse[i][j] = gsl_matrix_get(T_inverse_gsl, i, j);
+    }
+    double *results = new double [dim];
+    for(int i = 0; i < dim; i++)
+    {
+        results[i] = 0.0;
+        for(int j = 0; j < dim; j++)
+            results[i] += T_inverse[i][j]*V[j];
+    }
+
+    lambda = exp(results[0]);
+    R_o = sqrt(results[1])*hbarC;
+    R_s = sqrt(results[2])*hbarC;
+    R_l = sqrt(results[3])*hbarC;
+    R_os = sqrt(results[4])*hbarC;
+    R_ol = sqrt(results[5])*hbarC;
+    R_sl = sqrt(results[6])*hbarC;
+    cout << "lambda = " << lambda << endl;
+    cout << "R_o = " << R_o << " fm, R_s = " << R_s << " fm, R_l = " << R_l << " fm" << endl;
+    cout << "R_os = " << R_os << " fm, R_ol = " << R_ol << " fm, R_sl = " << R_sl << " fm." << endl;
+
+    gsl_matrix_free (T_gsl);
+    gsl_matrix_free (T_inverse_gsl);
+    gsl_permutation_free (perm);
+
+    delete [] qweight;
+    delete [] V;
+    for(int i = 0; i < dim; i++)
+    {
+        delete [] T[i];
+        delete [] T_inverse[i];
+    }
+    delete [] T;
+    delete [] T_inverse;
+    delete [] results;
+}
+
 
 //*********************************************************************
 // Functions used for multidimension fit
