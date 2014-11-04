@@ -269,6 +269,7 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
    double mu = surf->particle_mu[particle_id];
    double sign = particle_ptr[particle_id].sign;
    double degen = particle_ptr[particle_id].gspin;
+   double mass = particle_ptr[particle_id].mass;
 
    double gammaT = surf->u0;
    double ux = surf->u1;
@@ -287,21 +288,54 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
    double pi22 = surf->pi22;
    double pi33 = surf->pi33;
 
-   double expon = ((p0*gammaT - px*ux - py*uy) - mu) / Tdec;
+   double E_over_T = (p0*gammaT - px*ux - py*uy)/Tdec;
+   double expon = E_over_T - mu/Tdec;
+   //double expon = ((p0*gammaT - px*ux - py*uy) - mu) / Tdec;
    double f0 = 1./(exp(expon)+sign);       //thermal equilibrium distributions
 
    //p^mu d^3sigma_mu: The plus sign is due to the fact that the DA# variables are for the covariant surface integration
    double pdsigma = p0*da0 + px*da1 + py*da2;
 
    //viscous corrections
-   double Wfactor = p0*p0*pi00 - 2.0*p0*px*pi01 - 2.0*p0*py*pi02 + px*px*pi11 + 2.0*px*py*pi12 + py*py*pi22 + pz*pz*pi33;
-   double deltaf = INCLUDE_SHEAR_DELTAF*(1. - sign*f0)*Wfactor/(2.0*Tdec*Tdec*(Edec+Pdec));
+   double delta_f_shear = 0.0;
+   double delta_f_bulk = 0.0;
+   if(INCLUDE_SHEAR_DELTAF)
+   {
+       double Wfactor = p0*p0*pi00 - 2.0*p0*px*pi01 - 2.0*p0*py*pi02 + px*px*pi11 + 2.0*px*py*pi12 + py*py*pi22 + pz*pz*pi33;
+       delta_f_shear = (1. - sign*f0)*Wfactor/(2.0*Tdec*Tdec*(Edec+Pdec));
+   }
+   if(INCLUDE_BULK_DELTAF)
+   {
+       double bulkPi = surf->bulkPi/hbarC;   // convert it to fm^-4
+       // parameterization from JF
+       double C_bulk, e2;
+
+       // A Polynomial fit to each coefficient -- X is the temperature in fm^-1
+       // Both fits are reliable between T=100 -- 180 MeV , do not trust it beyond
+       double Tfm = Tdec/hbarC;  // convert it to fm^-1
+       C_bulk =  642096.624265727 - 8163329.49562861*Tfm +
+                 47162768.4292073*pow(Tfm,2) - 162590040.002683*pow(Tfm,3) +
+                 369637951.096896*pow(Tfm,4) - 578181331.809836*pow(Tfm,5) +
+                 629434830.225675*pow(Tfm,6) - 470493661.096657*pow(Tfm,7) +
+                 230936465.421*pow(Tfm,8) - 67175218.4629078*pow(Tfm,9) +
+                 8789472.32652964*pow(Tfm,10);
+
+       e2 =  1.18171174036192 - 17.6740645873717*Tfm +
+             136.298469057177*pow(Tfm,2) - 635.999435106846*pow(Tfm,3) +
+             1918.77100633321*pow(Tfm,4) - 3836.32258307711*pow(Tfm,5) +
+             5136.35746882372*pow(Tfm,6) - 4566.22991441914*pow(Tfm,7) +
+             2593.45375240886*pow(Tfm,8) - 853.908199724349*pow(Tfm,9) +
+             124.260460450113*pow(Tfm,10) ;
+
+      // bulk delta f is
+      delta_f_bulk = -1.0*(1.-sign*f0)/E_over_T*C_bulk*(mass*mass/Tdec/Tdec/3. - e2*E_over_T*E_over_T)*bulkPi;
+   }
 
    double dN_dyd2pTdphi;
    //if (deltaf < -1.0)  // delta f correction is too large
    //   dN_dyd2pTdphi = 0.0;
    //else
-   dN_dyd2pTdphi = 1.0*degen/(8.0*(M_PI*M_PI*M_PI))*pdsigma*f0*(1+deltaf);
+   dN_dyd2pTdphi = 1.0*degen/(8.0*(M_PI*M_PI*M_PI))*pdsigma*f0*(1. + delta_f_shear + delta_f_bulk);
    //out << "Spectral funct = " << dN_dyd2pTdphi << endl;
 
    return (dN_dyd2pTdphi);
