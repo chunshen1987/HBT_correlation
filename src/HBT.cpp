@@ -888,7 +888,6 @@ int HBT::binary_search(double* dataset, int data_length, double value)
 
 void HBT::Output_Correlationfunction_1D(double K_T)
 {
-   double K_y = 0.0;
    ostringstream oCorrelfun_1D_stream;
    oCorrelfun_1D_stream << path << "/correlfunct1D" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << ".dat";
    ofstream oCorrelfun_1D;
@@ -902,13 +901,10 @@ void HBT::Output_Correlationfunction_1D(double K_T)
    return;
 }
 
-void HBT::Output_Correlationfunction_3D()
+void HBT::Output_Correlationfunction_3D(double K_T)
 {
-   double K_y = 0.0;
-   double K_T = 0.0;
-   double K_phi = 0.0;
    ostringstream oCorrelfun_3D_stream;
-   oCorrelfun_3D_stream << path << "/correlfunct3D" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << "_phi_" << K_phi << ".dat";
+   oCorrelfun_3D_stream << path << "/correlfunct3D" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << ".dat";
    ofstream oCorrelfun_3D;
    oCorrelfun_3D.open(oCorrelfun_3D_stream.str().c_str());
    for(int i=0; i < qnpts; i++)

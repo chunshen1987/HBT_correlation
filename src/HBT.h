@@ -90,7 +90,7 @@ class HBT
       int binary_search(double* dataset, int data_length, double value);
 
       void Output_Correlationfunction_1D(double K_T);
-      void Output_Correlationfunction_3D();
+      void Output_Correlationfunction_3D(double K_T);
 
 };
 
