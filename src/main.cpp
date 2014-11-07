@@ -19,10 +19,6 @@
 #include<math.h>
 #include<sys/time.h>
 
-#include<gsl/gsl_sf_bessel.h>
-#include<gsl/gsl_rng.h>
-#include<gsl/gsl_randist.h>
-
 #include "Stopwatch.h"
 #include "parameters.h"
 #include "readindata.h"
