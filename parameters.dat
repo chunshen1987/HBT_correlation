@@ -27,6 +27,3 @@ turn_on_shear = 1                 # include shear viscous corrections in delta f
 flag_neg = 0                      # neglect all points that are negative in Cooper-Frye formula
 
 MCint_calls = 5000                # number of calls for monte carlo integration
-
-fit_max_iterations = 1000         # maximum iteration for gaussian fit to get correlation function
-fit_tolarence = 1e-6              # tolarence for gaussian fit

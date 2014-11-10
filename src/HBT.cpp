@@ -169,6 +169,7 @@ void HBT::calculate_azimuthal_averaged_HBT_radii(double y)
    {
        double KT_local = KT_min + i*dKT;
        SetEmissionData(FOsurf_ptr, y, KT_local);
+       //Cal_HBTRadii_fromEmissionfunction(0.0, 0.0);
        Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
        Output_Correlationfunction_1D(KT_local);
        //Cal_azimuthal_averaged_correlationfunction_3D(KT_local, y);
