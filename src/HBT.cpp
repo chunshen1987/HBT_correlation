@@ -517,9 +517,9 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y)
       Correl_1D_out_num[i]  = values_num[0];
       Correl_1D_side_num[i] = values_num[1];
       Correl_1D_long_num[i] = values_num[2];
-      Correl_1D_out_denorm[i]  = spectra;
-      Correl_1D_side_denorm[i] = spectra;
-      Correl_1D_long_denorm[i] = spectra;
+      Correl_1D_out_denorm[i]  = spectra*spectra;
+      Correl_1D_side_denorm[i] = spectra*spectra;
+      Correl_1D_long_denorm[i] = spectra*spectra;
    }
 
    delete [] cosK_phi;
@@ -606,7 +606,7 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_3D(double K_T, double K_y)
             }
             sum = integ1*integ1+integ2*integ2;
             Correl_3D_num[i][j][k] = sum;
-            Correl_3D_denorm[i][j][k] = spectra;
+            Correl_3D_denorm[i][j][k] = spectra*spectra;
          }
       }
    }
