@@ -68,25 +68,37 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
       q_long[i] = init_q + (double)i * delta_q;
    }
 
-   Correl_1D_out = new double [qnpts];
-   Correl_1D_side = new double [qnpts];
-   Correl_1D_long = new double [qnpts];
+   Correl_1D_out_num = new double [qnpts];
+   Correl_1D_side_num = new double [qnpts];
+   Correl_1D_long_num = new double [qnpts];
+   Correl_1D_out_denorm = new double [qnpts];
+   Correl_1D_side_denorm = new double [qnpts];
+   Correl_1D_long_denorm = new double [qnpts];
    for(int i=0; i<qnpts; i++)
    {
-      Correl_1D_out[i] = 0.0;
-      Correl_1D_side[i] = 0.0;
-      Correl_1D_long[i] = 0.0;
+      Correl_1D_out_num[i] = 0.0;
+      Correl_1D_side_num[i] = 0.0;
+      Correl_1D_long_num[i] = 0.0;
+      Correl_1D_out_denorm[i] = 0.0;
+      Correl_1D_side_denorm[i] = 0.0;
+      Correl_1D_long_denorm[i] = 0.0;
    }
    
-   Correl_3D = new double** [qnpts];
+   Correl_3D_num = new double** [qnpts];
+   Correl_3D_denorm = new double** [qnpts];
    for(int i=0; i<qnpts; i++)
    {
-      Correl_3D[i] = new double* [qnpts];
+      Correl_3D_num[i] = new double* [qnpts];
+      Correl_3D_denorm[i] = new double* [qnpts];
       for(int j=0; j<qnpts; j++)
       {
-         Correl_3D[i][j] = new double [qnpts];
+         Correl_3D_num[i][j] = new double [qnpts];
+         Correl_3D_denorm[i][j] = new double [qnpts];
          for(int k=0; k<qnpts; k++)
-            Correl_3D[i][j][k] = 0.0;
+         {
+            Correl_3D_num[i][j][k] = 0.0;
+            Correl_3D_denorm[i][j][k] = 0.0;
+         }
       }
    }
 
@@ -107,17 +119,25 @@ HBT::~HBT()
    delete [] q_side;
    delete [] q_long;
 
-   delete [] Correl_1D_out;
-   delete [] Correl_1D_side;
-   delete [] Correl_1D_long;
+   delete [] Correl_1D_out_num;
+   delete [] Correl_1D_side_num;
+   delete [] Correl_1D_long_num;
+   delete [] Correl_1D_out_denorm;
+   delete [] Correl_1D_side_denorm;
+   delete [] Correl_1D_long_denorm;
 
    for(int i=0; i<qnpts; i++)
    {
       for(int j=0; j< qnpts; j++)
-          delete [] Correl_3D[i][j];
-      delete [] Correl_3D[i];
+      {
+          delete [] Correl_3D_num[i][j];
+          delete [] Correl_3D_denorm[i][j];
+      }
+      delete [] Correl_3D_num[i];
+      delete [] Correl_3D_denorm[i];
    }
-   delete [] Correl_3D;
+   delete [] Correl_3D_num;
+   delete [] Correl_3D_denorm;
 
    return;
 }
@@ -424,9 +444,9 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y)
    for(int i = 0; i < qnpts; i++)
    {
       cout << "calculating q_mu = " << q_out[i] << " GeV..." << endl;
-      double values[3];
+      double values_num[3];
       for (int ops = 0; ops < 3; ops++)
-         values[ops] = 0.0;
+         values_num[ops] = 0.0e0;
       for (int l = 0; l < 3; l++)
       {
          double local_q_out=0.0, local_q_side=0.0, local_q_long=0.0;
@@ -491,14 +511,15 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y)
                 }
              }
          }
-         integ1 = integ1/spectra;
-         integ2 = integ2/spectra;
          double localvalue = integ1*integ1+integ2*integ2;
-         values[l] = localvalue;
+         values_num[l] = localvalue;
       }
-      Correl_1D_out[i]  = values[0];
-      Correl_1D_side[i] = values[1];
-      Correl_1D_long[i] = values[2];
+      Correl_1D_out_num[i]  = values_num[0];
+      Correl_1D_side_num[i] = values_num[1];
+      Correl_1D_long_num[i] = values_num[2];
+      Correl_1D_out_denorm[i]  = spectra;
+      Correl_1D_side_denorm[i] = spectra;
+      Correl_1D_long_denorm[i] = spectra;
    }
 
    delete [] cosK_phi;
@@ -583,10 +604,9 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_3D(double K_T, double K_y)
                   }
                }
             }
-            integ1 = integ1/spectra;
-            integ2 = integ2/spectra;
             sum = integ1*integ1+integ2*integ2;
-            Correl_3D[i][j][k] = sum;
+            Correl_3D_num[i][j][k] = sum;
+            Correl_3D_denorm[i][j][k] = spectra;
          }
       }
    }
@@ -641,17 +661,20 @@ void HBT::Output_Correlationfunction_1D(double K_T)
    for(int i=0; i < qnpts; i++)
        oCorrelfun_1D << scientific << setprecision(7) << setw(15)
                      << q_out[i] << "  " << 0.0e0 << "  " 
-                     << 0.0e0 << "  " << Correl_1D_out[i] << endl;
+                     << 0.0e0 << "  " << Correl_1D_out_num[i] << "  " 
+                     << Correl_1D_out_denorm[i] << endl;
    // side direction
    for(int i=0; i < qnpts; i++)
        oCorrelfun_1D << scientific << setprecision(7) << setw(15)
                      << 0.0e0 << "  " << q_side[i] << "  " 
-                     << 0.0e0 << "  " << Correl_1D_side[i] << endl;
+                     << 0.0e0 << "  " << Correl_1D_side_num[i] << "  " 
+                     << Correl_1D_side_denorm[i] << endl;
    // long direction
    for(int i=0; i < qnpts; i++)
        oCorrelfun_1D << scientific << setprecision(7) << setw(15)
                      << 0.0e0 << "  " << 0.0e0 << "  " 
-                     << q_long[i] << "  " << Correl_1D_long[i] << endl;
+                     << q_long[i] << "  " << Correl_1D_long_num[i] << "  "
+                     << Correl_1D_long_denorm[i] << endl;
    return;
 }
 
@@ -666,6 +689,7 @@ void HBT::Output_Correlationfunction_3D(double K_T)
          for(int k=0; k < qnpts; k++)
               oCorrelfun_3D << scientific << setprecision(7) << setw(15)
                             << q_out[i] << "  " << q_side[j] << "  " 
-                            << q_long[k] << "  " << Correl_3D[i][j][k] << endl;
+                            << q_long[k] << "  " << Correl_3D_num[i][j][k] << "  " 
+                            << Correl_3D_denorm[i][j][k] << endl;
    return;
 }
