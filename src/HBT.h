@@ -17,7 +17,6 @@ struct Emissionfunction_data
    double z;
    double t;
    double *data;
-   double CDF;
 };
 
 class HBT
@@ -54,13 +53,9 @@ class HBT
 
       //store correlation functions
       double *Correl_1D_out;
-      double *Correl_1D_out_err;
       double *Correl_1D_side;
-      double *Correl_1D_side_err;
       double *Correl_1D_long;
-      double *Correl_1D_long_err;
       double ***Correl_3D;
-      double ***Correl_3D_err;
 
       
       //HBT radii calculated from emission functions
@@ -85,8 +80,6 @@ class HBT
       void Cal_correlationfunction_3D();
       void Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y);
       void Cal_azimuthal_averaged_correlationfunction_3D(double K_T, double K_y);
-      //void Cal_correlationfunction_1D_MC();
-      //void Cal_correlationfunction_3D_MC();
       int binary_search(double* dataset, int data_length, double value);
 
       void Output_Correlationfunction_1D(double K_T);
