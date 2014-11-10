@@ -653,6 +653,7 @@ int HBT::binary_search(double* dataset, int data_length, double value)
 
 void HBT::Output_Correlationfunction_1D(double K_T)
 {
+   double error = 1e-4;   // "fake" error
    ostringstream oCorrelfun_1D_stream;
    oCorrelfun_1D_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << ".dat";
    ofstream oCorrelfun_1D;
@@ -662,24 +663,31 @@ void HBT::Output_Correlationfunction_1D(double K_T)
        oCorrelfun_1D << scientific << setprecision(7) << setw(15)
                      << q_out[i] << "  " << 0.0e0 << "  " 
                      << 0.0e0 << "  " << Correl_1D_out_num[i] << "  " 
-                     << Correl_1D_out_denorm[i] << endl;
+                     << Correl_1D_out_denorm[i] << "  " 
+                     << Correl_1D_out_num[i]/Correl_1D_out_denorm[i] << "  "
+                     << error << endl;
    // side direction
    for(int i=0; i < qnpts; i++)
        oCorrelfun_1D << scientific << setprecision(7) << setw(15)
                      << 0.0e0 << "  " << q_side[i] << "  " 
                      << 0.0e0 << "  " << Correl_1D_side_num[i] << "  " 
-                     << Correl_1D_side_denorm[i] << endl;
+                     << Correl_1D_side_denorm[i] << "  "
+                     << Correl_1D_side_num[i]/Correl_1D_side_denorm[i] << "  "
+                     << error << endl;
    // long direction
    for(int i=0; i < qnpts; i++)
        oCorrelfun_1D << scientific << setprecision(7) << setw(15)
                      << 0.0e0 << "  " << 0.0e0 << "  " 
                      << q_long[i] << "  " << Correl_1D_long_num[i] << "  "
-                     << Correl_1D_long_denorm[i] << endl;
+                     << Correl_1D_long_denorm[i] << "  "
+                     << Correl_1D_long_num[i]/Correl_1D_long_denorm[i] << "  "
+                     << error << endl;
    return;
 }
 
 void HBT::Output_Correlationfunction_3D(double K_T)
 {
+   double error = 1e-4;
    ostringstream oCorrelfun_3D_stream;
    oCorrelfun_3D_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << ".dat";
    ofstream oCorrelfun_3D;
@@ -690,6 +698,8 @@ void HBT::Output_Correlationfunction_3D(double K_T)
               oCorrelfun_3D << scientific << setprecision(7) << setw(15)
                             << q_out[i] << "  " << q_side[j] << "  " 
                             << q_long[k] << "  " << Correl_3D_num[i][j][k] << "  " 
-                            << Correl_3D_denorm[i][j][k] << endl;
+                            << Correl_3D_denorm[i][j][k] << "  "
+                            << Correl_3D_num[i][j][k]/Correl_3D_denorm[i][j][k] 
+                            << error << endl;
    return;
 }
