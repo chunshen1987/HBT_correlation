@@ -54,9 +54,7 @@ class HBT
       int flag_1D_projection;
       int ndir;      // number of directions for 1D correlation function
       //store correlation functions
-      double *Correl_1D_out_num, *Correl_1D_out_denorm;
-      double *Correl_1D_side_num, *Correl_1D_side_denorm;
-      double *Correl_1D_long_num, *Correl_1D_long_denorm;
+      double **Correl_1D_num, **Correl_1D_denorm;
       double ***Correl_3D_num, ***Correl_3D_denorm;
 
       double ***Correl_1D_phidiff_num, ***Correl_1D_phidiff_denorm;

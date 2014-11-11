@@ -72,20 +72,17 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
 
    if(azimuthal_flag == 0)
    {
-      Correl_1D_out_num = new double [qnpts];
-      Correl_1D_side_num = new double [qnpts];
-      Correl_1D_long_num = new double [qnpts];
-      Correl_1D_out_denorm = new double [qnpts];
-      Correl_1D_side_denorm = new double [qnpts];
-      Correl_1D_long_denorm = new double [qnpts];
-      for(int i=0; i<qnpts; i++)
+      Correl_1D_num = new double* [ndir];
+      Correl_1D_denorm = new double* [ndir];
+      for(int i = 0; i < ndir; i++)
       {
-         Correl_1D_out_num[i] = 0.0;
-         Correl_1D_side_num[i] = 0.0;
-         Correl_1D_long_num[i] = 0.0;
-         Correl_1D_out_denorm[i] = 0.0;
-         Correl_1D_side_denorm[i] = 0.0;
-         Correl_1D_long_denorm[i] = 0.0;
+         Correl_1D_num[i] = new double [qnpts];
+         Correl_1D_denorm[i] = new double [qnpts];
+         for(int j = 0; j < qnpts; j++)
+         {
+            Correl_1D_num[i][j] = 0.0;
+            Correl_1D_denorm[i][j] = 0.0;
+         }
       }
       
       Correl_3D_num = new double** [qnpts];
@@ -169,12 +166,13 @@ HBT::~HBT()
 
    if(azimuthal_flag == 0)
    {
-      delete [] Correl_1D_out_num;
-      delete [] Correl_1D_side_num;
-      delete [] Correl_1D_long_num;
-      delete [] Correl_1D_out_denorm;
-      delete [] Correl_1D_side_denorm;
-      delete [] Correl_1D_long_denorm;
+      for(int i = 0; i < ndir; i++)
+      {
+          delete [] Correl_1D_num[i];
+          delete [] Correl_1D_denorm[i];
+      }
+      delete [] Correl_1D_num;
+      delete [] Correl_1D_denorm;
 
       for(int i=0; i<qnpts; i++)
       {
@@ -229,7 +227,6 @@ void HBT::calculate_azimuthal_dependent_HBT_radii(double y)
    //SetEmissionData(FOsurf_ptr, y, p_T);
    //Cal_HBTRadii_fromEmissionfunction(p_T, y);
    
-   // under construction...
    double KT_min = paraRdr->getVal("KT_min");
    double KT_max = paraRdr->getVal("KT_max");
    double n_KT = paraRdr->getVal("n_KT");
@@ -532,15 +529,12 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y)
       }
    }
 
+   double local_q_out, local_q_side, local_q_long;
    for(int i = 0; i < qnpts; i++)
    {
       cout << "calculating q_mu = " << q_out[i] << " GeV..." << endl;
-      double values_num[3];
-      for (int ops = 0; ops < 3; ops++)
-         values_num[ops] = 0.0e0;
-      for (int l = 0; l < 3; l++)
+      for (int l = 0; l < ndir; l++)
       {
-         double local_q_out=0.0, local_q_side=0.0, local_q_long=0.0;
          switch (l)
          {
             case 0:
@@ -603,14 +597,9 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y)
              }
          }
          double localvalue = integ1*integ1+integ2*integ2;
-         values_num[l] = localvalue;
+         Correl_1D_num[l][i]  = localvalue;
+         Correl_1D_denorm[l][i]  = spectra*spectra;
       }
-      Correl_1D_out_num[i]  = values_num[0];
-      Correl_1D_side_num[i] = values_num[1];
-      Correl_1D_long_num[i] = values_num[2];
-      Correl_1D_out_denorm[i]  = spectra*spectra;
-      Correl_1D_side_denorm[i] = spectra*spectra;
-      Correl_1D_long_denorm[i] = spectra*spectra;
    }
 
    delete [] cosK_phi;
@@ -907,34 +896,54 @@ void HBT::Cal_azimuthal_dependent_correlationfunction_3D(double K_T, double K_y)
 void HBT::Output_Correlationfunction_1D(double K_T)
 {
    double error = 1e-4;   // "fake" error
+   double local_q_out, local_q_side, local_q_long;
+
    ostringstream oCorrelfun_1D_stream;
    oCorrelfun_1D_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << ".dat";
    ofstream oCorrelfun_1D;
    oCorrelfun_1D.open(oCorrelfun_1D_stream.str().c_str());
-   // out direction
-   for(int i=0; i < qnpts; i++)
-       oCorrelfun_1D << scientific << setprecision(7) << setw(15)
-                     << q_out[i] << "  " << 0.0e0 << "  " 
-                     << 0.0e0 << "  " << Correl_1D_out_num[i] << "  " 
-                     << Correl_1D_out_denorm[i] << "  " 
-                     << Correl_1D_out_num[i]/Correl_1D_out_denorm[i] << "  "
-                     << error << endl;
-   // side direction
-   for(int i=0; i < qnpts; i++)
-       oCorrelfun_1D << scientific << setprecision(7) << setw(15)
-                     << 0.0e0 << "  " << q_side[i] << "  " 
-                     << 0.0e0 << "  " << Correl_1D_side_num[i] << "  " 
-                     << Correl_1D_side_denorm[i] << "  "
-                     << Correl_1D_side_num[i]/Correl_1D_side_denorm[i] << "  "
-                     << error << endl;
-   // long direction
-   for(int i=0; i < qnpts; i++)
-       oCorrelfun_1D << scientific << setprecision(7) << setw(15)
-                     << 0.0e0 << "  " << 0.0e0 << "  " 
-                     << q_long[i] << "  " << Correl_1D_long_num[i] << "  "
-                     << Correl_1D_long_denorm[i] << "  "
-                     << Correl_1D_long_num[i]/Correl_1D_long_denorm[i] << "  "
-                     << error << endl;
+   for(int j = 0; j < ndir; j++)
+   {
+       for(int k = 0; k < qnpts; k++)
+       {
+           switch (j)
+           {
+              case 0:
+              {
+                 local_q_out  = q_out[k];
+                 local_q_side = 0.0e0;
+                 local_q_long = 0.0e0;
+                 break;
+              }
+              case 1:
+              {
+                 local_q_out  = 0.0e0;
+                 local_q_side = q_side[k];
+                 local_q_long = 0.0e0;
+                 break;
+              }
+              case 2:
+              {
+                 local_q_out  = 0.0e0;
+                 local_q_side = 0.0e0;
+                 local_q_long = q_long[k];
+                 break;
+              }
+              default:
+              {
+                 cout << "error in assigning q values! "<< endl;
+                 break;
+              }
+           }
+           oCorrelfun_1D << scientific << setprecision(7) << setw(15)
+                         << local_q_out << "  " << local_q_side << "  " 
+                         << local_q_long << "  " 
+                         << Correl_1D_num[j][k] << "  " 
+                         << Correl_1D_denorm[j][k] << "  " 
+                         << Correl_1D_num[j][k]/Correl_1D_denorm[j][k] 
+                         << "  " << error << endl;
+       }
+   }
    oCorrelfun_1D.close();
    return;
 }
@@ -995,6 +1004,7 @@ void HBT::Output_Correlationfunction_azimuthal_dependent_1D(double K_T)
    }
    return;
 }
+
 
 void HBT::Output_Correlationfunction_3D(double K_T)
 {
