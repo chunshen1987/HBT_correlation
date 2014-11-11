@@ -14,9 +14,15 @@ KT_min = 0.0                      # minimum value of the pair momentum k_T (GeV)
 KT_max = 1.0                      # maximum value of the pair momentum k_T (GeV)
 n_Kphi = 48                       # number of the azimuthal angles for the pair momentum k_T (range is assumed to be from 0 to 2*pi)
 
-qnpts = 20                        # number of points for momentum q (difference of the pair momentum) for correlaction function
+flag_1D_projection = 1            # calculation correlation function along 1D projection
+ndir = 5                          # number of the 1D projections to calculate for correlaiton function
+qnpts = 15                        # number of points for momentum q (difference of the pair momentum) for correlaction function
 delta_q = 0.01                    # grid spacing for momentum q in particle correlation function (GeV)
-init_q = 0.0                      # minimum value for momentum q (GeV)
+init_q = 0.01                     # minimum value for momentum q (GeV)
+
+flag_MC = 0                       # compute the correlation function at MC sampled points
+MC_samples = 60                   # number of points for monte carlo samples in q space
+q_max = 0.2                       # the maximum momentum to sample in each direction of q (GeV)
 
 eta_s_npts = 40                   # number of eta_s slices for numerical integration for boost-invariant freeze-out surface
 eta_s_f = 4.0                     # maximum value for the eta_s integration, from - eta_s_f to eta_s_f
@@ -26,10 +32,4 @@ turn_on_shear = 1                 # include shear viscous corrections in delta f
 
 flag_neg = 0                      # neglect all points that are negative in Cooper-Frye formula
 
-flag_MC = 1                       # compute the correlation function at MC sampled points
-MC_samples = 60                   # number of points for monte carlo samples in q space
-q_max = 0.2                       # the maximum momentum to sample in each direction of q (GeV)
-
-flag_1D_projection = 1            # calculation correlation function along 1D projection
-ndir = 5                          # number of the 1D projections to calculate for correlaiton function
 flag_HBT_from_source_variance = 0   # compute HBT radii from the variance of the souce function at q = 0 GeV
