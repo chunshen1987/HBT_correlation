@@ -76,8 +76,7 @@ int main(int argc, char *argv[])
    //HBT calculations begins ...
    int particle_idx=1;  //for pion+
    HBT HBT_hadron(path, paraRdr, particle, particle_idx, FOsurf_ptr, FO_length);
-   //HBT_hadron.calculate_azimuthal_dependent_HBT_radii(0.0);
-   HBT_hadron.calculate_azimuthal_averaged_HBT_radii(0.0);
+   HBT_hadron.calculation_HBT_correlation(0.0);
 
    sw_total.toc();
    cout << "Program totally finished in " << sw_total.takeTime() << " sec." << endl;

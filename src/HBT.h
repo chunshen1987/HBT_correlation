@@ -67,6 +67,7 @@ class HBT
       double **Correl_MC_phidiff_num, **Correl_MC_phidiff_denorm;
       
       //HBT radii calculated from emission functions
+      int flag_HBT_from_source_variance;
       double R_out_EM;
       double R_side_EM;
       double R_long_EM;
@@ -80,6 +81,7 @@ class HBT
       double Emissionfunction(double p0, double px, double py, double pz, FO_surf* surf);
 
       void Cal_HBTRadii_fromEmissionfunction(double K_T, double K_y);
+      void calculation_HBT_correlation(double y);
       void calculate_azimuthal_dependent_HBT_radii(double y);
       void calculate_azimuthal_averaged_HBT_radii(double y);
       void calculate_azimuthal_averaged_KT_integrated_HBT_radii(double y);

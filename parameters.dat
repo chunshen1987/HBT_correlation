@@ -32,3 +32,4 @@ q_max = 0.2                       # the maximum momentum to sample in each direc
 
 flag_1D_projection = 1            # calculation correlation function along 1D projection
 ndir = 5                          # number of the 1D projections to calculate for correlaiton function
+flag_HBT_from_source_variance = 0   # compute HBT radii from the variance of the souce function at q = 0 GeV

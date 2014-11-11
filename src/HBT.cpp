@@ -28,6 +28,7 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
 
    azimuthal_flag = paraRdr->getVal("azimuthal_flag");
    flag_1D_projection = paraRdr->getVal("flag_1D_projection");
+   flag_HBT_from_source_variance = paraRdr->getVal("flag_HBT_from_source_variance");
    ndir = paraRdr->getVal("ndir");
 
    // initialize Kphi array
@@ -56,6 +57,17 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
 
    // initialize correlation function
    qnpts = paraRdr->getVal("qnpts");
+   double init_q = paraRdr->getVal("init_q");
+   double delta_q = paraRdr->getVal("delta_q");
+   q_out = new double [qnpts];
+   q_side = new double [qnpts];
+   q_long = new double [qnpts];
+   for(int i=0; i<qnpts; i++)
+   {
+      q_out[i] = init_q + (double)i * delta_q;
+      q_side[i] = init_q + (double)i * delta_q;
+      q_long[i] = init_q + (double)i * delta_q;
+   }
 
    flag_MC = paraRdr->getVal("flag_MC");
    if(flag_MC == 1)
@@ -81,96 +93,95 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
           }
        }
    }
-
-   double init_q = paraRdr->getVal("init_q");
-   double delta_q = paraRdr->getVal("delta_q");
-   q_out = new double [qnpts];
-   q_side = new double [qnpts];
-   q_long = new double [qnpts];
-   for(int i=0; i<qnpts; i++)
+   else
    {
-      q_out[i] = init_q + (double)i * delta_q;
-      q_side[i] = init_q + (double)i * delta_q;
-      q_long[i] = init_q + (double)i * delta_q;
-   }
-
-   if(azimuthal_flag == 0)
-   {
-      Correl_1D_num = new double* [ndir];
-      Correl_1D_denorm = new double* [ndir];
-      for(int i = 0; i < ndir; i++)
+      if(azimuthal_flag == 0)
       {
-         Correl_1D_num[i] = new double [qnpts];
-         Correl_1D_denorm[i] = new double [qnpts];
-         for(int j = 0; j < qnpts; j++)
+         if(flag_1D_projection == 1)
          {
-            Correl_1D_num[i][j] = 0.0;
-            Correl_1D_denorm[i][j] = 0.0;
-         }
-      }
-      
-      Correl_3D_num = new double** [qnpts];
-      Correl_3D_denorm = new double** [qnpts];
-      for(int i=0; i<qnpts; i++)
-      {
-         Correl_3D_num[i] = new double* [qnpts];
-         Correl_3D_denorm[i] = new double* [qnpts];
-         for(int j=0; j<qnpts; j++)
-         {
-            Correl_3D_num[i][j] = new double [qnpts];
-            Correl_3D_denorm[i][j] = new double [qnpts];
-            for(int k=0; k<qnpts; k++)
+            Correl_1D_num = new double* [ndir];
+            Correl_1D_denorm = new double* [ndir];
+            for(int i = 0; i < ndir; i++)
             {
-               Correl_3D_num[i][j][k] = 0.0;
-               Correl_3D_denorm[i][j][k] = 0.0;
+               Correl_1D_num[i] = new double [qnpts];
+               Correl_1D_denorm[i] = new double [qnpts];
+               for(int j = 0; j < qnpts; j++)
+               {
+                  Correl_1D_num[i][j] = 0.0;
+                  Correl_1D_denorm[i][j] = 0.0;
+               }
+            }
+         }
+         else
+         {
+            Correl_3D_num = new double** [qnpts];
+            Correl_3D_denorm = new double** [qnpts];
+            for(int i=0; i<qnpts; i++)
+            {
+               Correl_3D_num[i] = new double* [qnpts];
+               Correl_3D_denorm[i] = new double* [qnpts];
+               for(int j=0; j<qnpts; j++)
+               {
+                  Correl_3D_num[i][j] = new double [qnpts];
+                  Correl_3D_denorm[i][j] = new double [qnpts];
+                  for(int k=0; k<qnpts; k++)
+                  {
+                     Correl_3D_num[i][j][k] = 0.0;
+                     Correl_3D_denorm[i][j][k] = 0.0;
+                  }
+               }
             }
          }
       }
-   }
-   else
-   {
-      Correl_1D_phidiff_num = new double** [n_Kphi];
-      Correl_1D_phidiff_denorm = new double** [n_Kphi];
-      for(int i = 0; i < n_Kphi; i++)
+      else
       {
-          Correl_1D_phidiff_num[i] = new double* [ndir];
-          Correl_1D_phidiff_denorm[i] = new double* [ndir];
-          for(int j = 0; j < ndir; j++)
-          {
-              Correl_1D_phidiff_num[i][j] = new double [qnpts];
-              Correl_1D_phidiff_denorm[i][j] = new double [qnpts];
-              for(int k = 0; k < qnpts; k++)
-              {
-                  Correl_1D_phidiff_num[i][j][k] = 0.0;
-                  Correl_1D_phidiff_denorm[i][j][k] = 0.0;
-              }
-          }
-      }
-      
-      Correl_3D_phidiff_num = new double*** [n_Kphi];
-      Correl_3D_phidiff_denorm = new double*** [n_Kphi];
-      for(int l = 0; l < n_Kphi; l++)
-      {
-         Correl_3D_phidiff_num[l] = new double** [qnpts];
-         Correl_3D_phidiff_denorm[l] = new double** [qnpts];
-         for(int i=0; i<qnpts; i++)
+         if(flag_1D_projection == 1)
          {
-            Correl_3D_phidiff_num[l][i] = new double* [qnpts];
-            Correl_3D_phidiff_denorm[l][i] = new double* [qnpts];
-            for(int j=0; j<qnpts; j++)
+            Correl_1D_phidiff_num = new double** [n_Kphi];
+            Correl_1D_phidiff_denorm = new double** [n_Kphi];
+            for(int i = 0; i < n_Kphi; i++)
             {
-               Correl_3D_phidiff_num[l][i][j] = new double [qnpts];
-               Correl_3D_phidiff_denorm[l][i][j] = new double [qnpts];
-               for(int k=0; k<qnpts; k++)
+                Correl_1D_phidiff_num[i] = new double* [ndir];
+                Correl_1D_phidiff_denorm[i] = new double* [ndir];
+                for(int j = 0; j < ndir; j++)
+                {
+                    Correl_1D_phidiff_num[i][j] = new double [qnpts];
+                    Correl_1D_phidiff_denorm[i][j] = new double [qnpts];
+                    for(int k = 0; k < qnpts; k++)
+                    {
+                        Correl_1D_phidiff_num[i][j][k] = 0.0;
+                        Correl_1D_phidiff_denorm[i][j][k] = 0.0;
+                    }
+                }
+            }
+         }
+         else
+         {
+            Correl_3D_phidiff_num = new double*** [n_Kphi];
+            Correl_3D_phidiff_denorm = new double*** [n_Kphi];
+            for(int l = 0; l < n_Kphi; l++)
+            {
+               Correl_3D_phidiff_num[l] = new double** [qnpts];
+               Correl_3D_phidiff_denorm[l] = new double** [qnpts];
+               for(int i=0; i<qnpts; i++)
                {
-                  Correl_3D_phidiff_num[l][i][j][k] = 0.0;
-                  Correl_3D_phidiff_denorm[l][i][j][k] = 0.0;
+                  Correl_3D_phidiff_num[l][i] = new double* [qnpts];
+                  Correl_3D_phidiff_denorm[l][i] = new double* [qnpts];
+                  for(int j=0; j<qnpts; j++)
+                  {
+                     Correl_3D_phidiff_num[l][i][j] = new double [qnpts];
+                     Correl_3D_phidiff_denorm[l][i][j] = new double [qnpts];
+                     for(int k=0; k<qnpts; k++)
+                     {
+                        Correl_3D_phidiff_num[l][i][j][k] = 0.0;
+                        Correl_3D_phidiff_denorm[l][i][j][k] = 0.0;
+                     }
+                  }
                }
             }
          }
       }
    }
-
    return;
 }
 
@@ -209,80 +220,121 @@ HBT::~HBT()
            delete [] Correl_MC_phidiff_denorm;
        }
    }
-
-   if(azimuthal_flag == 0)
-   {
-      for(int i = 0; i < ndir; i++)
-      {
-          delete [] Correl_1D_num[i];
-          delete [] Correl_1D_denorm[i];
-      }
-      delete [] Correl_1D_num;
-      delete [] Correl_1D_denorm;
-
-      for(int i=0; i<qnpts; i++)
-      {
-         for(int j=0; j< qnpts; j++)
-         {
-             delete [] Correl_3D_num[i][j];
-             delete [] Correl_3D_denorm[i][j];
-         }
-         delete [] Correl_3D_num[i];
-         delete [] Correl_3D_denorm[i];
-      }
-      delete [] Correl_3D_num;
-      delete [] Correl_3D_denorm;
-   }
    else
    {
-      for(int i = 0; i < n_Kphi; i++)
+      if(azimuthal_flag == 0)
       {
-         for(int j = 0; j < ndir; j++)
+         if(flag_1D_projection == 1)
          {
-             delete [] Correl_1D_phidiff_num[i][j];
-             delete [] Correl_1D_phidiff_denorm[i][j];
-         }
-         delete [] Correl_1D_phidiff_num[i];
-         delete [] Correl_1D_phidiff_denorm[i];
-         for(int j = 0; j < qnpts; j++)
-         {
-            for(int k = 0; k < qnpts; k++)
+            for(int i = 0; i < ndir; i++)
             {
-               delete [] Correl_3D_phidiff_num[i][j][k];
-               delete [] Correl_3D_phidiff_denorm[i][j][k];
+                delete [] Correl_1D_num[i];
+                delete [] Correl_1D_denorm[i];
             }
-            delete [] Correl_3D_phidiff_num[i][j];
-            delete [] Correl_3D_phidiff_denorm[i][j];
+            delete [] Correl_1D_num;
+            delete [] Correl_1D_denorm;
          }
-         delete [] Correl_3D_phidiff_num[i];
-         delete [] Correl_3D_phidiff_denorm[i];
+         else
+         {
+            for(int i=0; i<qnpts; i++)
+            {
+               for(int j=0; j< qnpts; j++)
+               {
+                   delete [] Correl_3D_num[i][j];
+                   delete [] Correl_3D_denorm[i][j];
+               }
+               delete [] Correl_3D_num[i];
+               delete [] Correl_3D_denorm[i];
+            }
+            delete [] Correl_3D_num;
+            delete [] Correl_3D_denorm;
+         }
       }
-      delete [] Correl_1D_phidiff_num;
-      delete [] Correl_1D_phidiff_denorm;
-      delete [] Correl_3D_phidiff_num;
-      delete [] Correl_3D_phidiff_denorm;
+      else
+      {
+         if(flag_1D_projection == 1)
+         {
+            for(int i = 0; i < n_Kphi; i++)
+            {
+               for(int j = 0; j < ndir; j++)
+               {
+                   delete [] Correl_1D_phidiff_num[i][j];
+                   delete [] Correl_1D_phidiff_denorm[i][j];
+               }
+               delete [] Correl_1D_phidiff_num[i];
+               delete [] Correl_1D_phidiff_denorm[i];
+            }
+            delete [] Correl_1D_phidiff_num;
+            delete [] Correl_1D_phidiff_denorm;
+         }
+         else
+         {
+            for(int i = 0; i < n_Kphi; i++)
+            {
+               for(int j = 0; j < qnpts; j++)
+               {
+                  for(int k = 0; k < qnpts; k++)
+                  {
+                     delete [] Correl_3D_phidiff_num[i][j][k];
+                     delete [] Correl_3D_phidiff_denorm[i][j][k];
+                  }
+                  delete [] Correl_3D_phidiff_num[i][j];
+                  delete [] Correl_3D_phidiff_denorm[i][j];
+               }
+               delete [] Correl_3D_phidiff_num[i];
+               delete [] Correl_3D_phidiff_denorm[i];
+            }
+            delete [] Correl_3D_phidiff_num;
+            delete [] Correl_3D_phidiff_denorm;
+         }
+      }
    }
-
    return;
+}
+
+void HBT::calculation_HBT_correlation(double y)
+{
+   if(azimuthal_flag == 1)
+      calculate_azimuthal_dependent_HBT_radii(y);
+   else
+      calculate_azimuthal_averaged_HBT_radii(y);
 }
 
 void HBT::calculate_azimuthal_dependent_HBT_radii(double y)
 {
    cout << "Calculating "<< particle_ptr[particle_id].name << endl;
 
-   //SetEmissionData(FOsurf_ptr, y, p_T);
-   //Cal_HBTRadii_fromEmissionfunction(p_T, y);
-   
    double KT_min = paraRdr->getVal("KT_min");
    double KT_max = paraRdr->getVal("KT_max");
    double n_KT = paraRdr->getVal("n_KT");
    double dKT = (KT_max - KT_min)/(n_KT - 1);
    for(int i = 0; i < n_KT; i++)
    {
-       double KT_local = KT_min + i*dKT;
-       SetEmissionData(FOsurf_ptr, y, KT_local);
-       Cal_azimuthal_dependent_correlationfunction_1D(KT_local, y);
-       Output_Correlationfunction_azimuthal_dependent_1D(KT_local);
+      double KT_local = KT_min + i*dKT;
+
+      SetEmissionData(FOsurf_ptr, y, KT_local);
+
+      if(flag_HBT_from_source_variance == 1)
+          Cal_HBTRadii_fromEmissionfunction(KT_local, y);
+
+      if(flag_MC == 1)
+      {
+         Cal_azimuthal_dependent_correlationfunction_MC(KT_local, y);
+         Output_Correlationfunction_azimuthal_dependent_MC(KT_local);
+      }
+      else
+      {
+         if(flag_1D_projection == 1)
+         {
+            Cal_azimuthal_dependent_correlationfunction_1D(KT_local, y);
+            Output_Correlationfunction_azimuthal_dependent_1D(KT_local);
+         }
+         else
+         {
+            Cal_azimuthal_dependent_correlationfunction_3D(KT_local, y);
+            Output_Correlationfunction_azimuthal_dependent_3D(KT_local);
+         }
+      }
    }
 }
 
@@ -299,12 +351,25 @@ void HBT::calculate_azimuthal_averaged_HBT_radii(double y)
    {
        double KT_local = KT_min + i*dKT;
        SetEmissionData(FOsurf_ptr, y, KT_local);
-       Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
-       Output_Correlationfunction_1D(KT_local);
-       //Cal_azimuthal_averaged_correlationfunction_3D(KT_local, y);
-       //Output_Correlationfunction_3D(KT_local);
-       //Cal_azimuthal_averaged_correlationfunction_MC(KT_local, y);
-       //Output_Correlationfunction_MC(KT_local);
+
+       if(flag_MC == 1)
+       {
+           Cal_azimuthal_averaged_correlationfunction_MC(KT_local, y);
+           Output_Correlationfunction_MC(KT_local);
+       }
+       else
+       {
+           if(flag_1D_projection == 1)
+           {
+               Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
+               Output_Correlationfunction_1D(KT_local);
+           }
+           else
+           {
+               Cal_azimuthal_averaged_correlationfunction_MC(KT_local, y);
+               Output_Correlationfunction_MC(KT_local);
+           }
+       }
    }
 }
 
