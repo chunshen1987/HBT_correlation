@@ -27,7 +27,7 @@ turn_on_shear = 1                 # include shear viscous corrections in delta f
 flag_neg = 0                      # neglect all points that are negative in Cooper-Frye formula
 
 flag_MC = 1                       # compute the correlation function at MC sampled points
-MC_samples = 50                   # number of points for monte carlo samples in q space
+MC_samples = 60                   # number of points for monte carlo samples in q space
 q_max = 0.2                       # the maximum momentum to sample in each direction of q (GeV)
 
 flag_1D_projection = 1            # calculation correlation function along 1D projection

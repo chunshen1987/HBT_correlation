@@ -299,12 +299,12 @@ void HBT::calculate_azimuthal_averaged_HBT_radii(double y)
    {
        double KT_local = KT_min + i*dKT;
        SetEmissionData(FOsurf_ptr, y, KT_local);
-       //Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
-       //Output_Correlationfunction_1D(KT_local);
+       Cal_azimuthal_averaged_correlationfunction_1D(KT_local, y);
+       Output_Correlationfunction_1D(KT_local);
        //Cal_azimuthal_averaged_correlationfunction_3D(KT_local, y);
        //Output_Correlationfunction_3D(KT_local);
-       Cal_azimuthal_averaged_correlationfunction_MC(KT_local, y);
-       Output_Correlationfunction_MC(KT_local);
+       //Cal_azimuthal_averaged_correlationfunction_MC(KT_local, y);
+       //Output_Correlationfunction_MC(KT_local);
    }
 }
 
@@ -888,12 +888,23 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_MC(double K_T, double K_y)
    double local_q_out, local_q_side, local_q_long;
    for(int i = 0; i < MC_samples; i++)
    {
-       q_out_MC[i] = drand48()*q_max;
-       q_side_MC[i] = drand48()*q_max;
-       q_long_MC[i] = drand48()*q_max;
-       local_q_out = q_out_MC[i];
-       local_q_side = q_side_MC[i];
-       local_q_long = q_long_MC[i];
+       if(i < MC_samples*2/3)
+       {
+           local_q_out = drand48()*q_max;
+           local_q_side = drand48()*q_max;
+           local_q_long = 0.0;
+       }
+       else
+       {
+           local_q_out = 0.0;
+           local_q_side = 0.0;
+           local_q_long = drand48()*q_max;
+       }
+
+       q_out_MC[i] = local_q_out;
+       q_side_MC[i] = local_q_side;
+       q_long_MC[i] = local_q_long;
+
        cout << "q_out = " << local_q_out << " GeV, "
             << "q_side = " << local_q_side << " GeV, "
             << "q_long = " << local_q_long << " GeV... " << endl;
@@ -1060,12 +1071,22 @@ void HBT::Cal_azimuthal_dependent_correlationfunction_MC(double K_T, double K_y)
    double local_q_out, local_q_side, local_q_long;
    for(int i = 0; i < MC_samples; i++)
    {
-       q_out_MC[i] = drand48()*q_max;
-       q_side_MC[i] = drand48()*q_max;
-       q_long_MC[i] = drand48()*q_max;
-       local_q_out = q_out_MC[i];
-       local_q_side = q_side_MC[i];
-       local_q_long = q_long_MC[i];
+       if(i < MC_samples*2/3)
+       {
+           local_q_out = drand48()*q_max;
+           local_q_side = drand48()*q_max;
+           local_q_long = 0.0;
+       }
+       else
+       {
+           local_q_out = 0.0;
+           local_q_side = 0.0;
+           local_q_long = drand48()*q_max;
+       }
+
+       q_out_MC[i] = local_q_out;
+       q_side_MC[i] = local_q_side;
+       q_long_MC[i] = local_q_long;
        cout << "q_out = " << local_q_out << " GeV, "
             << "q_side = " << local_q_side << " GeV, "
             << "q_long = " << local_q_long << " GeV... " << endl;
