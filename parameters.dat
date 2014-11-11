@@ -3,7 +3,7 @@ hydro_mode = 1                    # mode for reading in freeze out information
                                   # 1: reads outputs from MUSIC assuming boost-invariant
                                   # 2: reads outputs from MUSIC full (3+1)-d
 
-azimuthal_flag = 0                # 0: compute the azimuthal averaged HBT radii
+azimuthal_flag = 1                # 0: compute the azimuthal averaged HBT radii
                                   # 1: compute azimuthal dependent HBT radii
 
 kT_differenitial_flag = 0         # 0: integrate the pair momentum k_T over the given kT range for correlation function
@@ -27,3 +27,6 @@ turn_on_shear = 1                 # include shear viscous corrections in delta f
 flag_neg = 0                      # neglect all points that are negative in Cooper-Frye formula
 
 MCint_calls = 5000                # number of calls for monte carlo integration
+
+flag_1D_projection = 1            # calculation correlation function along 1D projection
+ndir = 3                          # number of the 1D projections to calculate for correlaiton function
