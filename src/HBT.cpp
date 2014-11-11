@@ -606,6 +606,20 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y)
                local_q_long = q_long[i];
                break;
             }
+            case 3:
+            {
+               local_q_out  = q_out[i];
+               local_q_side = q_side[i];
+               local_q_long = 0.0;
+               break;
+            }
+            case 4:
+            {
+               local_q_out  = q_out[i];
+               local_q_side = -q_side[i];
+               local_q_long = 0.0;
+               break;
+            }
             default:
             {
                cout << "error in assigning q values! "<< endl;
@@ -711,6 +725,20 @@ void HBT::Cal_azimuthal_dependent_correlationfunction_1D(double K_T, double K_y)
                local_q_out  = 0.0e0;
                local_q_side = 0.0e0;
                local_q_long = q_long[i];
+               break;
+            }
+            case 3:
+            {
+               local_q_out  = q_out[i];
+               local_q_side = q_side[i];
+               local_q_long = 0.0e0;
+               break;
+            }
+            case 4:
+            {
+               local_q_out  = q_out[i];
+               local_q_side = -q_side[i];
+               local_q_long = 0.0e0;
                break;
             }
             default:
@@ -1169,6 +1197,20 @@ void HBT::Output_Correlationfunction_1D(double K_T)
                  local_q_long = q_long[k];
                  break;
               }
+              case 3:
+              {
+                 local_q_out  = q_out[k];
+                 local_q_side = q_side[k];
+                 local_q_long = 0.0e0;
+                 break;
+              }
+              case 4:
+              {
+                 local_q_out  = q_out[k];
+                 local_q_side = -q_side[k];
+                 local_q_long = 0.0e0;
+                 break;
+              }
               default:
               {
                  cout << "error in assigning q values! "<< endl;
@@ -1223,6 +1265,20 @@ void HBT::Output_Correlationfunction_azimuthal_dependent_1D(double K_T)
                      local_q_out  = 0.0e0;
                      local_q_side = 0.0e0;
                      local_q_long = q_long[k];
+                     break;
+                  }
+                  case 3:
+                  {
+                     local_q_out  = q_out[k];
+                     local_q_side = q_side[k];
+                     local_q_long = 0.0e0;
+                     break;
+                  }
+                  case 4:
+                  {
+                     local_q_out  = q_out[k];
+                     local_q_side = -q_side[k];
+                     local_q_long = 0.0e0;
                      break;
                   }
                   default:

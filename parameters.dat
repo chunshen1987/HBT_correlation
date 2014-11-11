@@ -31,4 +31,4 @@ MC_samples = 60                   # number of points for monte carlo samples in 
 q_max = 0.2                       # the maximum momentum to sample in each direction of q (GeV)
 
 flag_1D_projection = 1            # calculation correlation function along 1D projection
-ndir = 3                          # number of the 1D projections to calculate for correlaiton function
+ndir = 5                          # number of the 1D projections to calculate for correlaiton function
