@@ -49,7 +49,6 @@ class HBT
 
       int qnpts;
       double *q_out, *q_side, *q_long;
-      int MCint_calls;
  
       int flag_1D_projection;
       int ndir;      // number of directions for 1D correlation function
@@ -60,6 +59,12 @@ class HBT
       double ***Correl_1D_phidiff_num, ***Correl_1D_phidiff_denorm;
       double ****Correl_3D_phidiff_num, ****Correl_3D_phidiff_denorm;
 
+      int flag_MC;
+      int MC_samples;
+      double q_max;
+      double *q_out_MC, *q_side_MC, *q_long_MC;
+      double *Correl_MC_num, *Correl_MC_denorm;
+      double **Correl_MC_phidiff_num, **Correl_MC_phidiff_denorm;
       
       //HBT radii calculated from emission functions
       double R_out_EM;
@@ -83,13 +88,17 @@ class HBT
       void Cal_correlationfunction_3D();
       void Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y);
       void Cal_azimuthal_averaged_correlationfunction_3D(double K_T, double K_y);
+      void Cal_azimuthal_averaged_correlationfunction_MC(double K_T, double K_y);
       void Cal_azimuthal_dependent_correlationfunction_1D(double K_T, double K_y);
       void Cal_azimuthal_dependent_correlationfunction_3D(double K_T, double K_y);
+      void Cal_azimuthal_dependent_correlationfunction_MC(double K_T, double K_y);
 
       void Output_Correlationfunction_1D(double K_T);
       void Output_Correlationfunction_3D(double K_T);
       void Output_Correlationfunction_azimuthal_dependent_1D(double K_T);
       void Output_Correlationfunction_azimuthal_dependent_3D(double K_T);
+      void Output_Correlationfunction_MC(double K_T);
+      void Output_Correlationfunction_azimuthal_dependent_MC(double K_T);
 
 };
 
