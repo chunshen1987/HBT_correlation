@@ -37,6 +37,7 @@ class HBT
 
       int azimuthal_flag;
 
+      double Psi_ev;
       int n_Kphi;
       double *Kphi, *Kphi_weight;
 
@@ -73,7 +74,7 @@ class HBT
       double R_long_EM;
 
    public:
-      HBT(string path_in, ParameterReader* paraRdr, particle_info* particle_in, int particle_idx, FO_surf* FOsurf_ptr_in, int FOarray_length);
+      HBT(string path_in, ParameterReader* paraRdr, particle_info* particle_in, int particle_idx, FO_surf* FOsurf_ptr_in, int FOarray_length, double event_plane);
       ~HBT();
 
       void SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T);

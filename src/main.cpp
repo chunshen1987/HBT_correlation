@@ -75,7 +75,8 @@ int main(int argc, char *argv[])
 
    //HBT calculations begins ...
    int particle_idx=1;  //for pion+
-   HBT HBT_hadron(path, paraRdr, particle, particle_idx, FOsurf_ptr, FO_length);
+   double Psi_ev = paraRdr->getVal("Psi_ev");
+   HBT HBT_hadron(path, paraRdr, particle, particle_idx, FOsurf_ptr, FO_length, Psi_ev);
    HBT_hadron.calculation_HBT_correlation(0.0);
 
    sw_total.toc();

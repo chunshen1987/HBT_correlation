@@ -9,7 +9,7 @@
 
 using namespace std;
 
-HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in, int particle_idx, FO_surf* FOsurf_ptr_in, int FOarray_length)
+HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in, int particle_idx, FO_surf* FOsurf_ptr_in, int FOarray_length, double event_plane)
 {
    path = path_in;
    paraRdr =  paraRdr_in;
@@ -18,6 +18,8 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
 
    FOsurf_ptr = FOsurf_ptr_in;
    FO_length = FOarray_length;
+
+   Psi_ev = event_plane;
 
    // initialize eta_s array
    eta_s_npts = paraRdr->getVal("eta_s_npts");
@@ -35,7 +37,7 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
    n_Kphi = paraRdr->getVal("n_Kphi");
    Kphi = new double [n_Kphi];
    Kphi_weight = new double [n_Kphi];
-   gauss_quadrature(n_Kphi, 1, 0.0, 0.0, 0.0, 2*M_PI, Kphi, Kphi_weight);
+   gauss_quadrature(n_Kphi, 1, 0.0, 0.0, 0.0+Psi_ev, 2*M_PI+Psi_ev, Kphi, Kphi_weight);
 
    // initialize emission function
    Emissionfunction_length = FO_length*eta_s_npts;
@@ -1302,7 +1304,7 @@ void HBT::Output_Correlationfunction_azimuthal_dependent_1D(double K_T)
    for(int i = 0; i < n_Kphi; i++)
    {
        ostringstream oCorrelfun_1D_stream;
-       oCorrelfun_1D_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << "_Kphi_" << Kphi[i] << ".dat";
+       oCorrelfun_1D_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << "_Kphi_" << Kphi[i]-Psi_ev << ".dat";
        ofstream oCorrelfun_1D;
        oCorrelfun_1D.open(oCorrelfun_1D_stream.str().c_str());
        for(int j = 0; j < ndir; j++)
@@ -1393,7 +1395,7 @@ void HBT::Output_Correlationfunction_azimuthal_dependent_3D(double K_T)
    for(int iphi = 0; iphi < n_Kphi; iphi++)
    {
        ostringstream oCorrelfun_3D_stream;
-       oCorrelfun_3D_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << "_Kphi_" << Kphi[iphi] << ".dat";
+       oCorrelfun_3D_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << "_Kphi_" << Kphi[iphi]-Psi_ev << ".dat";
        ofstream oCorrelfun_3D;
        oCorrelfun_3D.open(oCorrelfun_3D_stream.str().c_str());
        for(int i=0; i < qnpts; i++)
@@ -1435,7 +1437,7 @@ void HBT::Output_Correlationfunction_azimuthal_dependent_MC(double K_T)
    for(int iphi = 0; iphi < n_Kphi; iphi++)
    {
        ostringstream oCorrelfun_MC_stream;
-       oCorrelfun_MC_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << "_Kphi_" << Kphi[iphi] << ".dat";
+       oCorrelfun_MC_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << K_T << "_Kphi_" << Kphi[iphi]-Psi_ev << ".dat";
        ofstream oCorrelfun_MC;
        oCorrelfun_MC.open(oCorrelfun_MC_stream.str().c_str());
        for(int i = 0; i < MC_samples; i++)
