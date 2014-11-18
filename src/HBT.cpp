@@ -40,7 +40,14 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
    KT_weight = new double [n_KT];
    double KT_min = paraRdr->getVal("KT_min");
    double KT_max = paraRdr->getVal("KT_max");
-   gauss_quadrature(n_KT, 1, 0.0, 0.0, KT_min, KT_max, KT_array, KT_weight);
+   if(kT_differenitial_flag == 0)
+       gauss_quadrature(n_KT, 1, 0.0, 0.0, KT_min, KT_max, KT_array, KT_weight);
+   else
+   {
+       double dKT = (KT_max - KT_min)/(n_KT - 1);
+       for(int i = 0; i < n_KT; i++)
+           KT_array[i] = KT_min + i*dKT;
+   }
    n_Kphi = paraRdr->getVal("n_Kphi");
    Kphi = new double [n_Kphi];
    Kphi_weight = new double [n_Kphi];

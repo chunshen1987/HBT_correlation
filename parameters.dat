@@ -3,10 +3,10 @@ hydro_mode = 1                    # mode for reading in freeze out information
                                   # 1: reads outputs from MUSIC assuming boost-invariant
                                   # 2: reads outputs from MUSIC full (3+1)-d
 
-azimuthal_flag = 1                # 0: compute the azimuthal averaged HBT radii
+azimuthal_flag = 0                # 0: compute the azimuthal averaged HBT radii
                                   # 1: compute azimuthal dependent HBT radii
 
-kT_differenitial_flag = 0         # 0: integrate the pair momentum k_T over the given kT range for correlation function
+kT_differenitial_flag = 1         # 0: integrate the pair momentum k_T over the given kT range for correlation function
                                   # 1: compute the correlation function at each specifiec kT point
 
 n_KT = 5                          # number of the pair momentum k_T to calculate

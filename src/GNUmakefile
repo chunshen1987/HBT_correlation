@@ -11,7 +11,7 @@
 ##  
 
 CC := g++
-CFLAGS= -O3
+CFLAGS= -g
 
 RM		=	rm -f
 O               =       .o
