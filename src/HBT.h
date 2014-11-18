@@ -16,7 +16,7 @@ struct Emissionfunction_data
    double y;
    double z;
    double t;
-   double *data;
+   double **data;
 };
 
 class HBT
@@ -36,9 +36,11 @@ class HBT
       int INCLUDE_SHEAR_DELTAF, INCLUDE_BULK_DELTAF;
 
       int azimuthal_flag;
+      int kT_differenitial_flag;
 
       double Psi_ev;
-      int n_Kphi;
+      int n_KT, n_Kphi;
+      double *KT_array, *KT_weight;
       double *Kphi, *Kphi_weight;
 
       Emissionfunction_data* emission_S_K;
@@ -77,31 +79,29 @@ class HBT
       HBT(string path_in, ParameterReader* paraRdr, particle_info* particle_in, int particle_idx, FO_surf* FOsurf_ptr_in, int FOarray_length, double event_plane);
       ~HBT();
 
-      void SetEmissionData(FO_surf* FO_surface, double K_rap, double K_T);
+      void SetEmissionData(FO_surf* FO_surface, double K_rap);
 
       double Emissionfunction(double p0, double px, double py, double pz, FO_surf* surf);
 
-      void Cal_HBTRadii_fromEmissionfunction(double K_T, double K_y);
+      void Cal_HBTRadii_fromEmissionfunction(double K_y);
       void calculation_HBT_correlation(double y);
       void calculate_azimuthal_dependent_HBT_radii(double y);
       void calculate_azimuthal_averaged_HBT_radii(double y);
       void calculate_azimuthal_averaged_KT_integrated_HBT_radii(double y);
 
-      void Cal_correlationfunction_1D();
-      void Cal_correlationfunction_3D();
-      void Cal_azimuthal_averaged_correlationfunction_1D(double K_T, double K_y);
-      void Cal_azimuthal_averaged_correlationfunction_3D(double K_T, double K_y);
-      void Cal_azimuthal_averaged_correlationfunction_MC(double K_T, double K_y);
-      void Cal_azimuthal_dependent_correlationfunction_1D(double K_T, double K_y);
-      void Cal_azimuthal_dependent_correlationfunction_3D(double K_T, double K_y);
-      void Cal_azimuthal_dependent_correlationfunction_MC(double K_T, double K_y);
+      void Cal_azimuthal_averaged_correlationfunction_1D(int iKT, double K_y);
+      void Cal_azimuthal_averaged_correlationfunction_3D(int iKT, double K_y);
+      void Cal_azimuthal_averaged_correlationfunction_MC(int iKT, double K_y);
+      void Cal_azimuthal_dependent_correlationfunction_1D(int iKT, double K_y);
+      void Cal_azimuthal_dependent_correlationfunction_3D(int iKT, double K_y);
+      void Cal_azimuthal_dependent_correlationfunction_MC(int iKT, double K_y);
 
-      void Output_Correlationfunction_1D(double K_T);
-      void Output_Correlationfunction_3D(double K_T);
-      void Output_Correlationfunction_azimuthal_dependent_1D(double K_T);
-      void Output_Correlationfunction_azimuthal_dependent_3D(double K_T);
-      void Output_Correlationfunction_MC(double K_T);
-      void Output_Correlationfunction_azimuthal_dependent_MC(double K_T);
+      void Output_Correlationfunction_1D(int iKT);
+      void Output_Correlationfunction_3D(int iKT);
+      void Output_Correlationfunction_azimuthal_dependent_1D(int iKT);
+      void Output_Correlationfunction_azimuthal_dependent_3D(int iKT);
+      void Output_Correlationfunction_MC(int iKT);
+      void Output_Correlationfunction_azimuthal_dependent_MC(int iKT);
 
 };
 
