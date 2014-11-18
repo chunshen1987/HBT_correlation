@@ -836,6 +836,7 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_1D(int iKT, double K_y)
 
 void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_1D(double K_y)
 {
+   double hbarC_inv = 1./hbarC;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"HBT:: not support for y is not equal to 0 yet!" << endl;
@@ -923,36 +924,36 @@ void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_1D(double K_y)
          double integ1 = 0.0;  // numerator cosine part
          double integ2 = 0.0;  // numerator sine part
 
-         for(int iKT = 0; iKT < n_KT; iKT++)
+         for(int k = 0; k < Emissionfunction_length; k++)
          {
-             double K_T = KT_array[iKT];
-             double KT_weight_local = KT_weight[iKT];
-     	       double xsi  = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
-             double E1sq = xsi + K_T*local_q_out;
-             double E2sq = xsi - K_T*local_q_out;
-             double qt = sqrt(E1sq) - sqrt(E2sq);
-             double qz = local_q_long;
+             double tpt = emission_S_K[k].t;
+             double xpt = emission_S_K[k].x;
+             double ypt = emission_S_K[k].y;
+             double zpt = emission_S_K[k].z;
 
-             for(int iphi = 0; iphi < n_Kphi; iphi++)
+             for(int iKT = 0; iKT < n_KT; iKT++)
              {
-                 double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
-                 double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+                 double K_T = KT_array[iKT];
+                 double KT_weight_local = KT_weight[iKT];
+     	           double xsi  = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+                 double E1sq = xsi + K_T*local_q_out;
+                 double E2sq = xsi - K_T*local_q_out;
+                 double qt = sqrt(E1sq) - sqrt(E2sq);
+                 double qz = local_q_long;
 
-                 for(int k = 0; k < Emissionfunction_length; k++)
+                 for(int iphi = 0; iphi < n_Kphi; iphi++)
                  {
-                    double ss  = emission_S_K[k].data[iKT][iphi]*Kphi_weight[iphi]*K_T*KT_weight_local;
-                    double tpt = emission_S_K[k].t;
-                    double xpt = emission_S_K[k].x;
-                    double ypt = emission_S_K[k].y;
-                    double zpt = emission_S_K[k].z;
-                    
-                    for(int ii=0; ii<2; ii++)
-                    {
-                       zpt = zpt*(-1);   //using the symmetry along z axis
-                       double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
-                       integ1 += cos(arg)*ss;
-                       integ2 += sin(arg)*ss;
-                    }
+                     double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+                     double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+                     double ss  = emission_S_K[k].data[iKT][iphi]*Kphi_weight[iphi]*K_T*KT_weight_local;
+                     double temp_arg = tpt*qt - qx*xpt - qy*ypt;
+                     for(int ii=0; ii<2; ii++)
+                     {
+                        zpt = zpt*(-1);   //using the symmetry along z axis
+                        double arg = (temp_arg - qz*zpt)*hbarC_inv;
+                        integ1 += cos(arg)*ss;
+                        integ2 += sin(arg)*ss;
+                     }
                  }
              }
          }
@@ -970,6 +971,7 @@ void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_1D(double K_y)
 
 void HBT::Cal_azimuthal_dependent_correlationfunction_1D(int iKT, double K_y)
 {
+   double hbarC_inv = 1./hbarC;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"HBT:: not support for y is not equal to 0 yet!" << endl;
@@ -1064,19 +1066,20 @@ void HBT::Cal_azimuthal_dependent_correlationfunction_1D(int iKT, double K_y)
 
              for(int k = 0; k < Emissionfunction_length; k++)
              {
-                double ss  = emission_S_K[k].data[iKT][iphi];
-                double tpt = emission_S_K[k].t;
-                double xpt = emission_S_K[k].x;
-                double ypt = emission_S_K[k].y;
-                double zpt = emission_S_K[k].z;
-                
-                for(int ii=0; ii<2; ii++)
-                {
-                   zpt = zpt*(-1);   //using the symmetry along z axis
-                   double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
-                   integ1 += cos(arg)*ss;
-                   integ2 += sin(arg)*ss;
-                }
+                 double ss  = emission_S_K[k].data[iKT][iphi];
+                 double tpt = emission_S_K[k].t;
+                 double xpt = emission_S_K[k].x;
+                 double ypt = emission_S_K[k].y;
+                 double zpt = emission_S_K[k].z;
+                 
+                 double temp_arg = tpt*qt - qx*xpt -qy*ypt;
+                 for(int ii=0; ii<2; ii++)
+                 {
+                     zpt = zpt*(-1);   //using the symmetry along z axis
+                     double arg = (temp_arg - qz*zpt)*hbarC_inv;
+                     integ1 += cos(arg)*ss;
+                     integ2 += sin(arg)*ss;
+                 }
              }
              double localvalue = integ1*integ1+integ2*integ2;
              Correl_1D_phidiff_num[iphi][l][i] = localvalue;
@@ -1094,6 +1097,7 @@ void HBT::Cal_azimuthal_dependent_correlationfunction_1D(int iKT, double K_y)
 
 void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_1D(double K_y)
 {
+   double hbarC_inv = 1./hbarC;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"HBT:: not support for y is not equal to 0 yet!" << endl;
@@ -1183,30 +1187,32 @@ void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_1D(double K_y)
              double integ1 = 0.0;  // numerator cosine part
              double integ2 = 0.0;  // numerator sine part
 
-             for(int iKT = 0; iKT < n_KT; iKT++)
+             for(int k = 0; k < Emissionfunction_length; k++)
              {
-                 double K_T = KT_array[iKT];
-                 double KT_weight_local = KT_weight[iKT];
-     	           double xsi  = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
-                 double E1sq = xsi + K_T*local_q_out;
-                 double E2sq = xsi - K_T*local_q_out;
-                 double qt = sqrt(E1sq) - sqrt(E2sq);
-                 double qz = local_q_long;
+                double tpt = emission_S_K[k].t;
+                double xpt = emission_S_K[k].x;
+                double ypt = emission_S_K[k].y;
+                double zpt = emission_S_K[k].z;
 
-                 for(int k = 0; k < Emissionfunction_length; k++)
-                 {
-                    double ss  = emission_S_K[k].data[iKT][iphi]*K_T*KT_weight_local;
-                    double tpt = emission_S_K[k].t;
-                    double xpt = emission_S_K[k].x;
-                    double ypt = emission_S_K[k].y;
-                    double zpt = emission_S_K[k].z;
+                for(int iKT = 0; iKT < n_KT; iKT++)
+                {
+                    double K_T = KT_array[iKT];
+                    double KT_weight_local = KT_weight[iKT];
+     	              double xsi  = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+                    double E1sq = xsi + K_T*local_q_out;
+                    double E2sq = xsi - K_T*local_q_out;
+                    double qt = sqrt(E1sq) - sqrt(E2sq);
+                    double qz = local_q_long;
                     
+                    double ss  = emission_S_K[k].data[iKT][iphi]*K_T*KT_weight_local;
+                    
+                    double temp_arg = tpt*qt - qx*xpt - qy*ypt;
                     for(int ii=0; ii<2; ii++)
                     {
-                       zpt = zpt*(-1);   //using the symmetry along z axis
-                       double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
-                       integ1 += cos(arg)*ss;
-                       integ2 += sin(arg)*ss;
+                        zpt = zpt*(-1);   //using the symmetry along z axis
+                        double arg = (temp_arg - qz*zpt)*hbarC_inv;
+                        integ1 += cos(arg)*ss;
+                        integ2 += sin(arg)*ss;
                     }
                  }
              }
@@ -1226,6 +1232,7 @@ void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_1D(double K_y)
 
 void HBT::Cal_azimuthal_averaged_correlationfunction_3D(int iKT, double K_y)
 {
+   double hbarC_inv = 1./hbarC;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"not support for y not equals 0 yet!" << endl;
@@ -1280,23 +1287,24 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_3D(int iKT, double K_y)
             double qt = sqrt(E1sq) - sqrt(E2sq);
             double qz = local_q_long;
 
-            for(int iphi = 0; iphi < n_Kphi; iphi++)
+            for(int m = 0; m < Emissionfunction_length; m++)
             {
-               double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
-               double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
-               
-               for(int m = 0; m < Emissionfunction_length; m++)
+               double tpt = emission_S_K[m].t;
+               double xpt = emission_S_K[m].x;
+               double ypt = emission_S_K[m].y;
+               double zpt = emission_S_K[m].z;
+
+               for(int iphi = 0; iphi < n_Kphi; iphi++)
                {
                   double ss = emission_S_K[m].data[iKT][iphi]*Kphi_weight[iphi];
-                  double tpt = emission_S_K[m].t;
-                  double xpt = emission_S_K[m].x;
-                  double ypt = emission_S_K[m].y;
-                  double zpt = emission_S_K[m].z;
-
+                  double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+                  double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+               
+                  double temp_arg = tpt*qt - qx*xpt - qy*ypt;
                   for(int ii=0; ii<2; ii++)
                   {
                      zpt = zpt*(-1);
-                     double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
+                     double arg = (temp_arg - qz*zpt)*hbarC_inv;
                      integ1 += cos(arg)*ss;
                      integ2 += sin(arg)*ss;
                   }
@@ -1317,6 +1325,7 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_3D(int iKT, double K_y)
 
 void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_3D(double K_y)
 {
+   double hbarC_inv = 1./hbarC;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"not support for y not equals 0 yet!" << endl;
@@ -1364,34 +1373,34 @@ void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_3D(double K_y)
             double integ1 = 0.0;                         
             double integ2 = 0.0;
             double sum = 0.0;
-
-            for(int iKT = 0; iKT < n_KT; iKT++)
-            {
-                double K_T = KT_array[iKT];
-                double KT_weight_local = KT_weight[iKT];
-     	          double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
-                double E1sq = xsi + K_T*local_q_out;
-                double E2sq = xsi - K_T*local_q_out;
-                double qt = sqrt(E1sq) - sqrt(E2sq);
-                double qz = local_q_long;
-
-                for(int iphi = 0; iphi < n_Kphi; iphi++)
-                {
-                   double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
-                   double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
                    
-                   for(int m = 0; m < Emissionfunction_length; m++)
-                   {
-                      double ss = emission_S_K[m].data[iKT][iphi]*Kphi_weight[iphi]*K_T*KT_weight_local;
-                      double tpt = emission_S_K[m].t;
-                      double xpt = emission_S_K[m].x;
-                      double ypt = emission_S_K[m].y;
-                      double zpt = emission_S_K[m].z;
+            for(int m = 0; m < Emissionfunction_length; m++)
+            {
+               double tpt = emission_S_K[m].t;
+               double xpt = emission_S_K[m].x;
+               double ypt = emission_S_K[m].y;
+               double zpt = emission_S_K[m].z;
 
+               for(int iKT = 0; iKT < n_KT; iKT++)
+               {
+                   double K_T = KT_array[iKT];
+                   double KT_weight_local = KT_weight[iKT];
+     	             double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+                   double E1sq = xsi + K_T*local_q_out;
+                   double E2sq = xsi - K_T*local_q_out;
+                   double qt = sqrt(E1sq) - sqrt(E2sq);
+                   double qz = local_q_long;
+
+                   for(int iphi = 0; iphi < n_Kphi; iphi++)
+                   {
+                      double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+                      double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+                      double ss = emission_S_K[m].data[iKT][iphi]*Kphi_weight[iphi]*K_T*KT_weight_local;
+                      double temp_arg = tpt*qt - qx*xpt - qy*ypt;
                       for(int ii=0; ii<2; ii++)
                       {
                          zpt = zpt*(-1);
-                         double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
+                         double arg = (temp_arg - qz*zpt)*hbarC_inv;
                          integ1 += cos(arg)*ss;
                          integ2 += sin(arg)*ss;
                       }
@@ -1413,7 +1422,8 @@ void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_3D(double K_y)
 
 void HBT::Cal_azimuthal_averaged_correlationfunction_MC(int iKT, double K_y)
 {
-   if(fabs(K_y) > 1e-16)
+   double hbarC_inv = 1./hbarC;
+   if(fabs(K_y) > 1e-16) 
    {
        cout<<"not support for y not equals 0 yet!" << endl;
        return;
@@ -1478,23 +1488,23 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_MC(int iKT, double K_y)
        double qt = sqrt(E1sq) - sqrt(E2sq);
        double qz = local_q_long;
 
-       for(int iphi = 0; iphi < n_Kphi; iphi++)
+       for(int m = 0; m < Emissionfunction_length; m++)
        {
-          double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
-          double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
-          
-          for(int m = 0; m < Emissionfunction_length; m++)
+          double tpt = emission_S_K[m].t;
+          double xpt = emission_S_K[m].x;
+          double ypt = emission_S_K[m].y;
+          double zpt = emission_S_K[m].z;
+          for(int iphi = 0; iphi < n_Kphi; iphi++)
           {
+             double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+             double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
              double ss = emission_S_K[m].data[iKT][iphi]*Kphi_weight[iphi];
-             double tpt = emission_S_K[m].t;
-             double xpt = emission_S_K[m].x;
-             double ypt = emission_S_K[m].y;
-             double zpt = emission_S_K[m].z;
-
+          
+             double temp_arg = tpt*qt - xpt*qx - ypt*qy;
              for(int ii=0; ii<2; ii++)
              {
                 zpt = zpt*(-1);
-                double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
+                double arg = (temp_arg - qz*zpt)*hbarC_inv;
                 integ1 += cos(arg)*ss;
                 integ2 += sin(arg)*ss;
              }
@@ -1511,7 +1521,8 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_MC(int iKT, double K_y)
 }
 
 void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_MC(double K_y)
-{
+{ 
+   double hbarC_inv = 1./hbarC;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"not support for y not equals 0 yet!" << endl;
@@ -1572,33 +1583,33 @@ void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_MC(double K_y)
        double integ2 = 0.0;
        double sum = 0.0;
 
-       for(int iKT = 0; iKT < n_KT; iKT++)
+       for(int m = 0; m < Emissionfunction_length; m++)
        {
-           double K_T = KT_array[iKT];
-           double KT_weight_local = KT_weight[iKT];
-     	     double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
-           double E1sq = xsi + K_T*local_q_out;
-           double E2sq = xsi - K_T*local_q_out;
-           double qt = sqrt(E1sq) - sqrt(E2sq);
-           double qz = local_q_long;
+          double tpt = emission_S_K[m].t;
+          double xpt = emission_S_K[m].x;
+          double ypt = emission_S_K[m].y;
+          double zpt = emission_S_K[m].z;
 
-           for(int iphi = 0; iphi < n_Kphi; iphi++)
-           {
-              double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
-              double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
-              
-              for(int m = 0; m < Emissionfunction_length; m++)
+          for(int iKT = 0; iKT < n_KT; iKT++)
+          {
+              double K_T = KT_array[iKT];
+              double KT_weight_local = KT_weight[iKT];
+     	        double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+              double E1sq = xsi + K_T*local_q_out;
+              double E2sq = xsi - K_T*local_q_out;
+              double qt = sqrt(E1sq) - sqrt(E2sq);
+              double qz = local_q_long;
+
+              for(int iphi = 0; iphi < n_Kphi; iphi++)
               {
+                 double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+                 double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
                  double ss = emission_S_K[m].data[iKT][iphi]*Kphi_weight[iphi]*K_T*KT_weight_local;
-                 double tpt = emission_S_K[m].t;
-                 double xpt = emission_S_K[m].x;
-                 double ypt = emission_S_K[m].y;
-                 double zpt = emission_S_K[m].z;
-
+                 double temp_arg = tpt*qt - xpt*qx - ypt*qy;
                  for(int ii=0; ii<2; ii++)
                  {
                     zpt = zpt*(-1);
-                    double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
+                    double arg = (temp_arg - qz*zpt)*hbarC_inv;
                     integ1 += cos(arg)*ss;
                     integ2 += sin(arg)*ss;
                  }
@@ -1617,6 +1628,7 @@ void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_MC(double K_y)
 
 void HBT::Cal_azimuthal_dependent_correlationfunction_3D(int iKT, double K_y)
 {
+   double hbarC_inv = 1./hbarC;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"not support for y not equals 0 yet!" << endl;
@@ -1665,6 +1677,7 @@ void HBT::Cal_azimuthal_dependent_correlationfunction_3D(int iKT, double K_y)
             double qt = sqrt(E1sq) - sqrt(E2sq);
             double qz = local_q_long;
 
+
             for(int iphi = 0; iphi < n_Kphi; iphi++)
             {
                double integ1 = 0.0;                         
@@ -1672,19 +1685,20 @@ void HBT::Cal_azimuthal_dependent_correlationfunction_3D(int iKT, double K_y)
 
                double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
                double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
-               
+
                for(int m = 0; m < Emissionfunction_length; m++)
                {
-                  double ss = emission_S_K[m].data[iKT][iphi];
                   double tpt = emission_S_K[m].t;
                   double xpt = emission_S_K[m].x;
                   double ypt = emission_S_K[m].y;
                   double zpt = emission_S_K[m].z;
+                  double ss = emission_S_K[m].data[iKT][iphi];
 
+                  double temp_arg = tpt*qt - qx*xpt - qy*ypt;
                   for(int ii=0; ii<2; ii++)
                   {
                      zpt = zpt*(-1);
-                     double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
+                     double arg = (temp_arg -  qz*zpt)*hbarC_inv;
                      integ1 += cos(arg)*ss;
                      integ2 += sin(arg)*ss;
                   }
@@ -1705,6 +1719,7 @@ void HBT::Cal_azimuthal_dependent_correlationfunction_3D(int iKT, double K_y)
 
 void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_3D(double K_y)
 {
+   double hbarC_inv = 1./hbarC;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"not support for y not equals 0 yet!" << endl;
@@ -1758,30 +1773,30 @@ void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_3D(double K_y)
                double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
                double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
      	      
-            
-               for(int iKT = 0; iKT < n_KT; iKT++)
+               for(int m = 0; m < Emissionfunction_length; m++)
                {
-                   double K_T = KT_array[iKT];
-                   double KT_weight_local = KT_weight[iKT];
-                   double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
-                   double E1sq = xsi + K_T*local_q_out;
-                   double E2sq = xsi - K_T*local_q_out;
-                   double qt = sqrt(E1sq) - sqrt(E2sq);
-                   double qz = local_q_long;
+                  double tpt = emission_S_K[m].t;
+                  double xpt = emission_S_K[m].x;
+                  double ypt = emission_S_K[m].y;
+                  double zpt = emission_S_K[m].z;
 
-               
-                   for(int m = 0; m < Emissionfunction_length; m++)
-                   {
+                  for(int iKT = 0; iKT < n_KT; iKT++)
+                  {
+                      double K_T = KT_array[iKT];
+                      double KT_weight_local = KT_weight[iKT];
+                      double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+                      double E1sq = xsi + K_T*local_q_out;
+                      double E2sq = xsi - K_T*local_q_out;
+                      double qt = sqrt(E1sq) - sqrt(E2sq);
+                      double qz = local_q_long;
+
                       double ss = emission_S_K[m].data[iKT][iphi]*K_T*KT_weight_local;
-                      double tpt = emission_S_K[m].t;
-                      double xpt = emission_S_K[m].x;
-                      double ypt = emission_S_K[m].y;
-                      double zpt = emission_S_K[m].z;
-
+               
+                      double temp_arg = tpt*qt - xpt*qx - ypt*qy;
                       for(int ii=0; ii<2; ii++)
                       {
                          zpt = zpt*(-1);
-                         double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
+                         double arg = (temp_arg - qz*zpt)*hbarC_inv;
                          integ1 += cos(arg)*ss;
                          integ2 += sin(arg)*ss;
                       }
@@ -1803,6 +1818,7 @@ void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_3D(double K_y)
 
 void HBT::Cal_azimuthal_dependent_correlationfunction_MC(int iKT, double K_y)
 {
+   double hbarC_inv = 1./hbarC;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"not support for y not equals 0 yet!" << endl;
@@ -1899,6 +1915,7 @@ void HBT::Cal_azimuthal_dependent_correlationfunction_MC(int iKT, double K_y)
 
 void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_MC(double K_y)
 {
+   double hbarC_inv = 1./hbarC;
    if(fabs(K_y) > 1e-16)
    {
        cout<<"not support for y not equals 0 yet!" << endl;
@@ -1962,30 +1979,30 @@ void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_MC(double K_y)
           double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
           double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
 
-          for(int iKT = 0; iKT < n_KT; iKT++)
+          for(int m = 0; m < Emissionfunction_length; m++)
           {
-              double K_T = KT_array[iKT];
-              double KT_weight_local = KT_weight[iKT];
+             double tpt = emission_S_K[m].t;
+             double xpt = emission_S_K[m].x;
+             double ypt = emission_S_K[m].y;
+             double zpt = emission_S_K[m].z;
+             for(int iKT = 0; iKT < n_KT; iKT++)
+             {
+                 double K_T = KT_array[iKT];
+                 double KT_weight_local = KT_weight[iKT];
 
-     	        double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
-              double E1sq = xsi + K_T*local_q_out;
-              double E2sq = xsi - K_T*local_q_out;
-              double qt = sqrt(E1sq) - sqrt(E2sq);
-              double qz = local_q_long;
-
-          
-              for(int m = 0; m < Emissionfunction_length; m++)
-              {
+     	           double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+                 double E1sq = xsi + K_T*local_q_out;
+                 double E2sq = xsi - K_T*local_q_out;
+                 double qt = sqrt(E1sq) - sqrt(E2sq);
+                 double qz = local_q_long;
+                 
                  double ss  = emission_S_K[m].data[iKT][iphi]*K_T*KT_weight_local;
-                 double tpt = emission_S_K[m].t;
-                 double xpt = emission_S_K[m].x;
-                 double ypt = emission_S_K[m].y;
-                 double zpt = emission_S_K[m].z;
 
+                 double temp_arg = tpt*qt - qx*xpt - qy*ypt;
                  for(int ii=0; ii<2; ii++)
                  {
                     zpt = zpt*(-1);
-                    double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
+                    double arg = (temp_arg - qz*zpt)*hbarC_inv;
                     integ1 += cos(arg)*ss;
                     integ2 += sin(arg)*ss;
                  }
