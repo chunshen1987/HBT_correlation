@@ -456,6 +456,8 @@ void HBT::SetEmissionData(FO_surf* FO_surface, double K_rap)
   {
       double kT_local = KT_array[i];
       mT[i] = sqrt(mass*mass + kT_local*kT_local);
+      K_x[i] = new double [n_Kphi];
+      K_y[i] = new double [n_Kphi];
       for(int j = 0; j < n_Kphi; j++)
       {
           K_x[i][j] = kT_local*cos(Kphi[j]);
