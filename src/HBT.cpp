@@ -313,10 +313,20 @@ HBT::~HBT()
 
 void HBT::calculation_HBT_correlation(double y)
 {
-   if(azimuthal_flag == 1)
-       calculate_azimuthal_dependent_HBT_radii(y);
+   if(kT_differenitial_flag == 1)
+   {
+       if(azimuthal_flag == 1)
+           calculate_azimuthal_dependent_HBT_radii(y);
+       else
+           calculate_azimuthal_averaged_HBT_radii(y);
+   }
    else
-       calculate_azimuthal_averaged_HBT_radii(y);
+   {
+       if(azimuthal_flag == 1)
+           calculate_azimuthal_dependent_KT_integrated_HBT_radii(y);
+       else
+           calculate_azimuthal_averaged_KT_integrated_HBT_radii(y);
+   }
 }
 
 void HBT::calculate_azimuthal_dependent_HBT_radii(double y)
