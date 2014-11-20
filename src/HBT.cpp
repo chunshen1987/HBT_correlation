@@ -659,7 +659,7 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
                  + 450509014334.964*T_power[2] - 1673143669281.46*T_power[3] 
                  + 4062340452589.89*T_power[4] - 6737468792456.4*T_power[5] 
                  + 7730102407679.65*T_power[6] - 6058276038129.83*T_power[7] 
-                 + 3103990764357.81*T_power[8] - 938850005883.612*T_power[8] 
+                 + 3103990764357.81*T_power[8] - 938850005883.612*T_power[9] 
                  + 127305171097.249*T_power[10]);
 
            // bulk delta f

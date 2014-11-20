@@ -9,9 +9,9 @@ azimuthal_flag = 0                # 0: compute the azimuthal averaged HBT radii
 kT_differenitial_flag = 1         # 0: integrate the pair momentum k_T over the given kT range for correlation function
                                   # 1: compute the correlation function at each specifiec kT point
 
-n_KT = 3                          # number of the pair momentum k_T to calculate
-KT_min = 0.5                      # minimum value of the pair momentum k_T (GeV)
-KT_max = 1.0                      # maximum value of the pair momentum k_T (GeV)
+n_KT = 2                          # number of the pair momentum k_T to calculate
+KT_min = 0.0                      # minimum value of the pair momentum k_T (GeV)
+KT_max = 0.25                      # maximum value of the pair momentum k_T (GeV)
 n_Kphi = 40                       # number of the azimuthal angles for the pair momentum k_T (range is assumed to be from 0 to 2*pi)
 
 Psi_ev = 0.0                      # angle of the event plane
@@ -32,7 +32,7 @@ eta_s_f = 4.0                     # maximum value for the eta_s integration, fro
 
 turn_on_shear = 1                 # include shear viscous corrections in delta f
 turn_on_bulk = 1                  # include bulk viscous corrections in delta f
-bulk_deltaf_type = 1              # 1: bulk delta f from relaxation time approximation
+bulk_deltaf_type = 4              # 1: bulk delta f from relaxation time approximation
                                   # 2: bulk delta f from 14-moment expansion (alpha = 0)
                                   # 3: bulk delta f from 14-moment expansion (alpha = 1/2)
                                   # 4: bulk delta f from 14-moment expansion (alpha = 1)
