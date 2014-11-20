@@ -576,7 +576,7 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
        T_power[0] = 1.0;
        for(int ipow = 1; ipow < 11; ipow++)
            T_power[ipow] = T_power[ipow-1]*Tfm;
-       if(bulk_deltaf_type == 0)
+       if(bulk_deltaf_type == 1)
        {
            // parameterization from JF and Gabriel
            double C_bulk, e2;
@@ -599,7 +599,7 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
            // bulk delta f is
            delta_f_bulk = -1.0*(1.-sign*f0)/E_over_T*C_bulk*(mass*mass/Tdec/Tdec/3. - e2*E_over_T*E_over_T)*bulkPi;
        }
-       else if(bulk_deltaf_type == 1)
+       else if(bulk_deltaf_type == 2)
        {
            //e0 and e1 have units of fm^4
            double e0, e1;
@@ -621,7 +621,7 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
            // bulk delta f is
            delta_f_bulk = -1.*(1.-sign*f0)*(-e0+e1*E_over_T)*bulkPi;
        }
-       else if (bulk_deltaf_type == 2)
+       else if (bulk_deltaf_type == 3)
        {
            //e0 and e1 have units of fm^4
            double e0, e1;
@@ -643,7 +643,7 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
            // bulk delta f
            delta_f_bulk = -1.0*(1.-sign*f0)/sqrt(E_over_T)*(-e0 + e1*E_over_T)*bulkPi;
        }
-       else if (bulk_deltaf_type == 3)
+       else if (bulk_deltaf_type == 4)
        {
            //e0 and e1 have units of fm^4
            double e0, e1;
