@@ -1,4 +1,4 @@
-hydro_mode = 1                    # mode for reading in freeze out information 
+hydro_mode = 0                    # mode for reading in freeze out information 
                                   # 0: reads outputs from VISH2+1
                                   # 1: reads outputs from MUSIC assuming boost-invariant
                                   # 2: reads outputs from MUSIC full (3+1)-d
@@ -16,7 +16,8 @@ n_Kphi = 48                       # number of the azimuthal angles for the pair 
 
 Psi_ev = 0.0                      # angle of the event plane
 
-flag_1D_projection = 1            # calculation correlation function along 1D projection
+flag_1D_projection = 1            # 1: calculate correlation function along 1D projection
+                                  # 0: calculate correlation function in 3D q-space
 ndir = 5                          # number of the 1D projections to calculate for correlaiton function
 qnpts = 15                        # number of points for momentum q (difference of the pair momentum) for correlaction function
 delta_q = 0.01                    # grid spacing for momentum q in particle correlation function (GeV)
@@ -29,8 +30,13 @@ q_max = 0.2                       # the maximum momentum to sample in each direc
 eta_s_npts = 40                   # number of eta_s slices for numerical integration for boost-invariant freeze-out surface
 eta_s_f = 4.0                     # maximum value for the eta_s integration, from - eta_s_f to eta_s_f
 
-turn_on_bulk = 0                  # include bulk viscous corrections in delta f
 turn_on_shear = 1                 # include shear viscous corrections in delta f
+turn_on_bulk = 0                  # include bulk viscous corrections in delta f
+bulk_deltaf_type = 0              # 0: bulk delta f from relaxation time approximation
+                                  # 1: bulk delta f from 14-moment expansion (alpha = 0)
+                                  # 2: bulk delta f from 14-moment expansion (alpha = 1/2)
+                                  # 3: bulk delta f from 14-moment expansion (alpha = 1)
+                                  
 
 flag_neg = 0                      # neglect all points that are negative in Cooper-Frye formula
 

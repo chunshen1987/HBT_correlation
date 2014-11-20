@@ -73,6 +73,8 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
 
    INCLUDE_SHEAR_DELTAF = paraRdr->getVal("turn_on_shear");
    INCLUDE_BULK_DELTAF = paraRdr->getVal("turn_on_bulk");
+   bulk_deltaf_type = paraRdr->getVal("bulk_deltaf_type");
+
    flag_neg = paraRdr->getVal("flag_neg");
 
    // initialize correlation function
@@ -569,40 +571,107 @@ double HBT::Emissionfunction(double p0, double px, double py, double pz, FO_surf
    if(INCLUDE_BULK_DELTAF)
    {
        double bulkPi = surf->bulkPi/hbarC;   // convert it to fm^-4
-       // parameterization from JF
-       double C_bulk, e2;
-
-       // A Polynomial fit to each coefficient -- X is the temperature in fm^-1
-       // Both fits are reliable between T=100 -- 180 MeV , do not trust it beyond
        double Tfm = Tdec/hbarC;  // convert it to fm^-1
        double T_power[11];
        T_power[0] = 1.0;
        for(int ipow = 1; ipow < 11; ipow++)
            T_power[ipow] = T_power[ipow-1]*Tfm;
+       if(bulk_deltaf_type == 0)
+       {
+           // parameterization from JF and Gabriel
+           double C_bulk, e2;
+           // A Polynomial fit to each coefficient -- X is the temperature in fm^-1
+           // Both fits are reliable between T=100 -- 180 MeV , do not trust it beyond
+           C_bulk = (  642096.624265727 - 8163329.49562861*T_power[1] 
+                     + 47162768.4292073*T_power[2] - 162590040.002683*T_power[3] 
+                     + 369637951.096896*T_power[4] - 578181331.809836*T_power[5] 
+                     + 629434830.225675*T_power[6] - 470493661.096657*T_power[7] 
+                     + 230936465.421*T_power[8] - 67175218.4629078*T_power[9] 
+                     + 8789472.32652964*T_power[10]);
 
-       C_bulk = (  642096.624265727 - 8163329.49562861*T_power[1] 
-                 + 47162768.4292073*T_power[2] - 162590040.002683*T_power[3] 
-                 + 369637951.096896*T_power[4] - 578181331.809836*T_power[5] 
-                 + 629434830.225675*T_power[6] - 470493661.096657*T_power[7] 
-                 + 230936465.421*T_power[8] - 67175218.4629078*T_power[9] 
-                 + 8789472.32652964*T_power[10]);
+           e2 = (  1.18171174036192 - 17.6740645873717*T_power[1] 
+                 + 136.298469057177*T_power[2] - 635.999435106846*T_power[3] 
+                 + 1918.77100633321*T_power[4] - 3836.32258307711*T_power[5]
+                 + 5136.35746882372*T_power[6] - 4566.22991441914*T_power[7]
+                 + 2593.45375240886*T_power[8] - 853.908199724349*T_power[9]
+                 + 124.260460450113*T_power[10]);
 
-       e2 = (  1.18171174036192 - 17.6740645873717*T_power[1] 
-             + 136.298469057177*T_power[2] - 635.999435106846*T_power[3] 
-             + 1918.77100633321*T_power[4] - 3836.32258307711*T_power[5]
-             + 5136.35746882372*T_power[6] - 4566.22991441914*T_power[7]
-             + 2593.45375240886*T_power[8] - 853.908199724349*T_power[9]
-             + 124.260460450113*T_power[10]);
+           // bulk delta f is
+           delta_f_bulk = -1.0*(1.-sign*f0)/E_over_T*C_bulk*(mass*mass/Tdec/Tdec/3. - e2*E_over_T*E_over_T)*bulkPi;
+       }
+       else if(bulk_deltaf_type == 1)
+       {
+           //e0 and e1 have units of fm^4
+           double e0, e1;
+           // A Polynomial fit to each coefficient -- Tfm is the temperature in fm^-1
+           // Both fits are reliable between T=100 -- 180 MeV , do not trust it beyond
+           e0 = (  21091365.1182649 - 290482229.281782*T_power[1] 
+                 + 1800423055.01882*T_power[2] - 6608608560.99887*T_power[3] 
+                 + 15900800422.7138*T_power[4] - 26194517161.8205*T_power[5] 
+                 + 29912485360.2916*T_power[6] - 23375101221.2855*T_power[7] 
+                 + 11960898238.0134*T_power[8] - 3618358144.18576*T_power[9] 
+                 + 491369134.205902*T_power[10]);
 
-      // bulk delta f is
-      delta_f_bulk = -1.0*(1.-sign*f0)/E_over_T*C_bulk*(mass*mass/Tdec/Tdec/3. - e2*E_over_T*E_over_T)*bulkPi;
+           e1 = (  4007863.29316896 - 55199395.3534188*T_power[1] 
+                 + 342115196.396492*T_power[2] - 1255681487.77798*T_power[3] 
+                 + 3021026280.08401*T_power[4] - 4976331606.85766*T_power[5] 
+                 + 5682163732.74188*T_power[6] - 4439937810.57449*T_power[7] 
+                 + 2271692965.05568*T_power[8] - 687164038.128814*T_power[9] 
+                 + 93308348.3137008*T_power[10]);
+           // bulk delta f is
+           delta_f_bulk = -1.*(1.-sign*f0)*(-e0+e1*E_over_T)*bulkPi;
+       }
+       else if (bulk_deltaf_type == 2)
+       {
+           //e0 and e1 have units of fm^4
+           double e0, e1;
+           // A Polynomial fit to each coefficient -- Tfm is the temperature in fm^-1
+           // Both fits are reliable between T=100 -- 180 MeV , do not trust it beyond
+           e0 = (  160421664.93603 - 2212807124.97991*T_power[1] 
+                 + 13707913981.1425*T_power[2] - 50204536518.1767*T_power[3] 
+                 + 120354649094.362*T_power[4] - 197298426823.223*T_power[5] 
+                 + 223953760788.288*T_power[6] - 173790947240.829*T_power[7] 
+                 + 88231322888.0423*T_power[8] - 26461154892.6963*T_power[9] 
+                 + 3559805050.19592*T_power[10]);
+           e1 = (  33369186.2536556 - 460293490.420478*T_power[1] 
+                 + 2851449676.09981*T_power[2] - 10443297927.601*T_power[3] 
+                 + 25035517099.7809*T_power[4] - 41040777943.4963*T_power[5] 
+                 + 46585225878.8723*T_power[6] - 36150531001.3718*T_power[7] 
+                 + 18353035766.9323*T_power[8] - 5504165325.05431*T_power[9] 
+                 + 740468257.784873*T_power[10]);
+
+           // bulk delta f
+           delta_f_bulk = -1.0*(1.-sign*f0)/sqrt(E_over_T)*(-e0 + e1*E_over_T)*bulkPi;
+       }
+       else if (bulk_deltaf_type == 3)
+       {
+           //e0 and e1 have units of fm^4
+           double e0, e1;
+           // A Polynomial fit to each coefficient -- Tfm is the temperature in fm^-1
+           // Both fits are reliable between T=100 -- 180 MeV , do not trust it beyond
+           e0 = (  1167272041.90731 - 16378866444.6842*T_power[1] 
+                 + 103037615761.617*T_power[2] - 382670727905.111*T_power[3] 
+                 + 929111866739.436*T_power[4] - 1540948583116.54*T_power[5] 
+                 + 1767975890298.1*T_power[6] - 1385606389545*T_power[7] 
+                 + 709922576963.213*T_power[8] - 214726945096.326*T_power[9] 
+                 + 29116298091.9219*T_power[10]);
+           e1 = (  5103633637.7213 - 71612903872.8163*T_power[1] 
+                 + 450509014334.964*T_power[2] - 1673143669281.46*T_power[3] 
+                 + 4062340452589.89*T_power[4] - 6737468792456.4*T_power[5] 
+                 + 7730102407679.65*T_power[6] - 6058276038129.83*T_power[7] 
+                 + 3103990764357.81*T_power[8] - 938850005883.612*T_power[8] 
+                 + 127305171097.249*T_power[10]);
+
+           // bulk delta f
+           delta_f_bulk = -1.0*(1.-sign*f0)*(e0 - e1/E_over_T)*bulkPi;
+       }
    }
 
    double dN_dyd2pTdphi;
-   //if ((deltaf + delta_f_bulk) < -1.0)  // delta f correction is too large
-   //   dN_dyd2pTdphi = 0.0;
-   //else
-   dN_dyd2pTdphi = 1.0*degen/(8.0*(M_PI*M_PI*M_PI))*pdsigma*f0*(1. + delta_f_shear + delta_f_bulk);
+   if ((delta_f_shear + delta_f_bulk) < -1.0)  // delta f correction is too large
+      dN_dyd2pTdphi = 0.0;
+   else
+      dN_dyd2pTdphi = 1.0*degen/(8.0*(M_PI*M_PI*M_PI))*pdsigma*f0*(1. + delta_f_shear + delta_f_bulk);
    //out << "Spectral funct = " << dN_dyd2pTdphi << endl;
 
    return (dN_dyd2pTdphi);

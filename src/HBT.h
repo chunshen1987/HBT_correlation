@@ -34,6 +34,7 @@ class HBT
       double *eta_s, *eta_s_weight;
 
       int INCLUDE_SHEAR_DELTAF, INCLUDE_BULK_DELTAF;
+      int bulk_deltaf_type;
 
       int azimuthal_flag;
       int kT_differenitial_flag;
