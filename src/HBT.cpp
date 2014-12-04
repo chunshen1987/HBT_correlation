@@ -951,21 +951,21 @@ void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_1D(double K_y)
             case 0:
             {
                local_q_out  = q_out[i];
-               local_q_side = 0.0e0;
-               local_q_long = 0.0e0;
+               local_q_side = 0.01e0;
+               local_q_long = 0.01e0;
                break;
             }
    	      case 1:
             {
-               local_q_out  = 0.0e0;
+               local_q_out  = 0.01e0;
                local_q_side = q_side[i];
-               local_q_long = 0.0e0;
+               local_q_long = 0.01e0;
                break;
             }
             case 2:
             {
-               local_q_out  = 0.0e0;
-               local_q_side = 0.0e0;
+               local_q_out  = 0.01e0;
+               local_q_side = 0.01e0;
                local_q_long = q_long[i];
                break;
             }
