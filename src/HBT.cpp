@@ -44,7 +44,7 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
        gauss_quadrature(n_KT, 1, 0.0, 0.0, KT_min, KT_max, KT_array, KT_weight);
    else
    {
-       double dKT = (KT_max - KT_min)/(n_KT - 1);
+       double dKT = (KT_max - KT_min)/(n_KT - 1 + 1e-15);
        for(int i = 0; i < n_KT; i++)
            KT_array[i] = KT_min + i*dKT;
    }
