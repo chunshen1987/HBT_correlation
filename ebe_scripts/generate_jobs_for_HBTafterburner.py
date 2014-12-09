@@ -57,11 +57,11 @@ module add ifort_icc/15.0
 (
     cd %s
     mkdir results
-    ln -s %s/tmp/surface.dat results/surface.dat
-    ln -s %s/tmp/input results/input 
-    ./HBT.e n_KT=2 KT_min=0.0 KT_max=0.2
-    ./HBT.e n_KT=2 KT_min=0.4 KT_max=0.6
-    ./HBT.e n_KT=2 KT_min=0.8 KT_max=1.0
+    cp %s/tmp/surface.dat results/surface.dat
+    cp %s/tmp/input results/input 
+    ./HBT.e n_KT=2 KT_min=0.0 KT_max=0.2 >> output.log
+    ./HBT.e n_KT=2 KT_min=0.4 KT_max=0.6 >> output.log
+    ./HBT.e n_KT=2 KT_min=0.8 KT_max=1.0 >> output.log
     mv results ../HBT_results
 )
 """ % (ifolder+1, walltime, target_folder, code_folder_name, 
