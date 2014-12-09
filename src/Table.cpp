@@ -182,7 +182,7 @@ void Table::loadTableFromFile(string data_filename)
   // delete old data first
   deleteTable();
   // get new ones
-  fstream fs(data_filename.c_str());
+  fstream fs(data_filename.c_str(), fstream::in);
   if (fs.is_open()==false)
   {
     cout << "Table::loadTableFromFile error: the data file " << data_filename << " cannot be opened." << endl;

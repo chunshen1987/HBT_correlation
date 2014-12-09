@@ -96,7 +96,7 @@ int read_FOdata::read_in_chemical_potentials(string path, int FO_length, FO_surf
        // determine the type of the EOS 
        ostringstream config_file;
        config_file << path << "/input";
-       ifstream configuration(config_file.str().c_str());
+       ifstream configuration(config_file.str().c_str(), ios::in);
        string temp1;
        string temp_name;
        while(!configuration.eof())
@@ -170,7 +170,7 @@ void read_FOdata::read_decdat(int length, FO_surf* surf_ptr)
   cout<<" -- Read in information on freeze out surface...";
   ostringstream decdat_stream;
   decdat_stream << path << "/decdat2.dat";
-  ifstream decdat(decdat_stream.str().c_str());
+  ifstream decdat(decdat_stream.str().c_str(), ios::in);
   for(int i=0; i<length; i++)
   {
      decdat >> surf_ptr[i].tau;
@@ -224,7 +224,7 @@ void read_FOdata::read_surfdat(int length, FO_surf* surf_ptr)
   double dummy;
   char rest_dummy[512];
   surfdat_stream << path << "/surface.dat";
-  ifstream surfdat(surfdat_stream.str().c_str());
+  ifstream surfdat(surfdat_stream.str().c_str(), ios::in);
   for(int i=0; i<length; i++)
   {
      surfdat >> dummy >> dummy;
@@ -260,7 +260,7 @@ void read_FOdata::read_FOsurfdat_MUSIC_boost_invariant(int length, FO_surf* surf
   int idx = 0;
   char rest_dummy[512];
   surfdat_stream << path << "/surface.dat";
-  ifstream surfdat(surfdat_stream.str().c_str());
+  ifstream surfdat(surfdat_stream.str().c_str(), ios::in);
   for(int i = 0; i < length*n_eta_skip; i++)
   {
      getline(surfdat, input, '\n' );
@@ -356,7 +356,7 @@ void read_FOdata::read_FOsurfdat_MUSIC_boost_invariant(int length, FO_surf* surf
        config_file << path << "/input";
        double eta_size;
        int n_eta;
-       ifstream configuration(config_file.str().c_str());
+       ifstream configuration(config_file.str().c_str(), ios::in);
        string temp1;
        string temp_name;
        while(!configuration.eof())
@@ -371,7 +371,7 @@ void read_FOdata::read_FOsurfdat_MUSIC_boost_invariant(int length, FO_surf* surf
            }
        }
        configuration.close();
-       configuration.open(config_file.str().c_str());
+       configuration.open(config_file.str().c_str(), ios::in);
        while(!configuration.eof())
        {
            getline(configuration, temp1);
@@ -404,7 +404,7 @@ void read_FOdata::read_FOsurfdat_MUSIC(int length, FO_surf* surf_ptr)
   double dummy;
   char rest_dummy[512];
   surfdat_stream << path << "/surface.dat";
-  ifstream surfdat(surfdat_stream.str().c_str());
+  ifstream surfdat(surfdat_stream.str().c_str(), ios::in);
   for(int i=0; i<length; i++)
   {
      // freeze out position
@@ -477,7 +477,7 @@ void read_FOdata::read_decdat_mu(int FO_length, int N_stable, double** particle_
   ostringstream decdat_mu_stream;
   double dummy;
   decdat_mu_stream << path << "/decdat_mu.dat";
-  ifstream decdat_mu(decdat_mu_stream.str().c_str());
+  ifstream decdat_mu(decdat_mu_stream.str().c_str(), ios::in);
 
   //For backward compatibility: decdat_mu.dat can be one line or FO_length lines
   for(int j=0; j<FO_length; j++)
@@ -542,7 +542,7 @@ int read_FOdata::read_resonances_list(particle_info* particle)
    double eps = 1e-15;
    int Nparticle=0;
    cout << " -- Read in particle resonance decay table...";
-   ifstream resofile("EOS/pdg.dat");
+   ifstream resofile("EOS/pdg.dat", ios::in);
    int local_i = 0;
    int dummy_int;
    while (!resofile.eof())
@@ -647,18 +647,18 @@ void read_FOdata::calculate_particle_mu(int Nparticle, FO_surf* FOsurf_ptr, int 
    ifstream particletable;
    if(mode == 0)
    {
-      particletable.open("EOS/EOS_particletable.dat");
+      particletable.open("EOS/EOS_particletable.dat", ios::in);
    }
    else if (mode == 1 || mode == 2)
    {
       if(IEOS_music == 3)
-         particletable.open("EOS/EOS_tables/s95p-v1-PCE150/EOS_particletable.dat");
+         particletable.open("EOS/EOS_tables/s95p-v1-PCE150/EOS_particletable.dat", ios::in);
       else if(IEOS_music == 4)
-         particletable.open("EOS/EOS_tables/s95p-v1-PCE155/EOS_particletable.dat");
+         particletable.open("EOS/EOS_tables/s95p-v1-PCE155/EOS_particletable.dat", ios::in);
       else if(IEOS_music == 5)
-         particletable.open("EOS/EOS_tables/s95p-v1-PCE160/EOS_particletable.dat");
+         particletable.open("EOS/EOS_tables/s95p-v1-PCE160/EOS_particletable.dat", ios::in);
       else if(IEOS_music == 6)
-         particletable.open("EOS/EOS_tables/s95p-v1-PCE165/EOS_particletable.dat");
+         particletable.open("EOS/EOS_tables/s95p-v1-PCE165/EOS_particletable.dat", ios::in);
       else
       {
          cout << "invalid EOS option for MUSIC: " << IEOS_music << endl;
