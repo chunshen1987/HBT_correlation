@@ -19,9 +19,10 @@ red = "\033[91m"
 normal = "\033[0m"
 
 try:
-    working_folder = path.abspath(argv[1])
+    source_folder = path.abspath(argv[1])
+    working_folder = path.abspath(argv[2])
 except(IOError):
-    print("Usage: generate_jobs_for_afterburner.py working_folder")
+    print("Usage: generate_jobs_for_afterburner.py source_folder working_folder")
     exit(1)
 
 print(purple + "\n" + "-"*80 
@@ -31,10 +32,12 @@ walltime = '1:00:00'
 node_folder_name = "node"
 code_folder_name = 'HBT_correlation'
 
-file_folder_list = glob(path.join(working_folder, '*'))
+file_folder_list = glob(path.join(source_folder, '*'))
 
 for ifolder in range(len(file_folder_list)):
-    target_folder = path.join(file_folder_list[ifolder], 'job-%d' % (ifolder+1))
+    source_folder_path = file_folder_list[ifolder]
+    source_folder_name = source_folder_path.split('/')[-1]
+    target_folder = path.join(working_folder, source_folder_name)
     copytree(node_folder_name, target_folder)
     open(path.join(target_folder, "job-%d.pbs" % (ifolder+1)), "w").write(
 """
@@ -51,12 +54,13 @@ for ifolder in range(len(file_folder_list)):
 (
     cd %s
     mkdir results
-    cp ../../tmp/surface.dat results
-    cp ../../tmp/input results
-    ./HBT.e n_KT=2 KT_min=0.0 KT_max=0.25
-    ./HBT.e n_KT=2 KT_min=0.5 KT_max=0.75
-    ./HBT.e n_KT=2 KT_min=1.0 KT_max=1.25
+    ln -s %s/tmp/surface.dat results/surface.dat
+    ln -s %s/tmp/input results/input 
+    ./HBT.e n_KT=2 KT_min=0.0 KT_max=0.2
+    ./HBT.e n_KT=2 KT_min=0.4 KT_max=0.6
+    ./HBT.e n_KT=2 KT_min=0.8 KT_max=1.0
     mv results ../HBT_results
 )
-""" % (ifolder+1, walltime, target_folder, code_folder_name)
+""" % (ifolder+1, walltime, target_folder, code_folder_name, 
+       source_folder_path, source_folder_path)
     )
