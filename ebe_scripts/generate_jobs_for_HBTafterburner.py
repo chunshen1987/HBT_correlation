@@ -45,12 +45,15 @@ for ifolder in range(len(file_folder_list)):
 #PBS -N after_burner_job-%d
 #PBS -l walltime=%s
 #PBS -l nodes=1:ppn=2
-#PBS -j oe
 #PBS -S /bin/bash
 #PBS -e test.err
 #PBS -o test.log
 #PBS -A cqn-654-ac
+#PBS -m bea
+#PBS -M chunshen1987@gmail.com
 #PBS -d %s
+
+module add ifort_icc/15.0
 (
     cd %s
     mkdir results
