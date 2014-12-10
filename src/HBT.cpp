@@ -30,7 +30,7 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
 
    azimuthal_flag = paraRdr->getVal("azimuthal_flag");
    kT_differenitial_flag = paraRdr->getVal("kT_differenitial_flag");
-   flag_1D_projection = paraRdr->getVal("flag_1D_projection");
+   qspace_sample_mode = paraRdr->getVal("qspace_sample_mode");
    flag_HBT_from_source_variance = paraRdr->getVal("flag_HBT_from_source_variance");
    ndir = paraRdr->getVal("ndir");
 
@@ -91,8 +91,7 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
       q_long[i] = init_q + (double)i * delta_q;
    }
 
-   flag_MC = paraRdr->getVal("flag_MC");
-   if(flag_MC == 1)
+   if(qspace_sample_mode == 3)
    {
        MC_samples = paraRdr->getVal("MC_samples");
        q_max = paraRdr->getVal("q_max");
@@ -115,89 +114,108 @@ HBT::HBT(string path_in, ParameterReader* paraRdr_in, particle_info* particle_in
           }
        }
    }
+   else if(qspace_sample_mode == 0)
+   {
+      if(azimuthal_flag == 0)
+      {
+         Correl_1D_num = new double* [ndir];
+         Correl_1D_denorm = new double* [ndir];
+         for(int i = 0; i < ndir; i++)
+         {
+            Correl_1D_num[i] = new double [qnpts];
+            Correl_1D_denorm[i] = new double [qnpts];
+            for(int j = 0; j < qnpts; j++)
+            {
+               Correl_1D_num[i][j] = 0.0;
+               Correl_1D_denorm[i][j] = 0.0;
+            }
+         }
+      }
+      else
+      {
+         Correl_1D_phidiff_num = new double** [n_Kphi];
+         Correl_1D_phidiff_denorm = new double** [n_Kphi];
+         for(int i = 0; i < n_Kphi; i++)
+         {
+             Correl_1D_phidiff_num[i] = new double* [ndir];
+             Correl_1D_phidiff_denorm[i] = new double* [ndir];
+             for(int j = 0; j < ndir; j++)
+             {
+                 Correl_1D_phidiff_num[i][j] = new double [qnpts];
+                 Correl_1D_phidiff_denorm[i][j] = new double [qnpts];
+                 for(int k = 0; k < qnpts; k++)
+                 {
+                     Correl_1D_phidiff_num[i][j][k] = 0.0;
+                     Correl_1D_phidiff_denorm[i][j][k] = 0.0;
+                 }
+             }
+         }
+      }
+   }
+   else if(qspace_sample_mode == 1)
+   {
+      int npoints = qnpts*qnpts + qnpts;
+      q_out_2p1 = new double [npoints];
+      q_side_2p1 = new double [npoints];
+      q_long_2p1 = new double [npoints];
+      if(azimuthal_flag == 0)
+      {
+         Correl_2p1_num = new double [npoints];
+         Correl_2p1_denorm = new double [npoints];
+      }
+      else
+      {
+         Correl_2p1_phidiff_num = new double* [n_Kphi];
+         Correl_2p1_phidiff_denorm = new double* [n_Kphi];
+         for(int i = 0; i < n_Kphi; i++)
+         {
+             Correl_2p1_phidiff_num[i] = new double [npoints];
+             Correl_2p1_phidiff_denorm[i] = new double [npoints];
+         }
+      }
+   }
    else
    {
       if(azimuthal_flag == 0)
       {
-         if(flag_1D_projection == 1)
+         Correl_3D_num = new double** [qnpts];
+         Correl_3D_denorm = new double** [qnpts];
+         for(int i=0; i<qnpts; i++)
          {
-            Correl_1D_num = new double* [ndir];
-            Correl_1D_denorm = new double* [ndir];
-            for(int i = 0; i < ndir; i++)
+            Correl_3D_num[i] = new double* [qnpts];
+            Correl_3D_denorm[i] = new double* [qnpts];
+            for(int j=0; j<qnpts; j++)
             {
-               Correl_1D_num[i] = new double [qnpts];
-               Correl_1D_denorm[i] = new double [qnpts];
-               for(int j = 0; j < qnpts; j++)
+               Correl_3D_num[i][j] = new double [qnpts];
+               Correl_3D_denorm[i][j] = new double [qnpts];
+               for(int k=0; k<qnpts; k++)
                {
-                  Correl_1D_num[i][j] = 0.0;
-                  Correl_1D_denorm[i][j] = 0.0;
-               }
-            }
-         }
-         else
-         {
-            Correl_3D_num = new double** [qnpts];
-            Correl_3D_denorm = new double** [qnpts];
-            for(int i=0; i<qnpts; i++)
-            {
-               Correl_3D_num[i] = new double* [qnpts];
-               Correl_3D_denorm[i] = new double* [qnpts];
-               for(int j=0; j<qnpts; j++)
-               {
-                  Correl_3D_num[i][j] = new double [qnpts];
-                  Correl_3D_denorm[i][j] = new double [qnpts];
-                  for(int k=0; k<qnpts; k++)
-                  {
-                     Correl_3D_num[i][j][k] = 0.0;
-                     Correl_3D_denorm[i][j][k] = 0.0;
-                  }
+                  Correl_3D_num[i][j][k] = 0.0;
+                  Correl_3D_denorm[i][j][k] = 0.0;
                }
             }
          }
       }
       else
       {
-         if(flag_1D_projection == 1)
+         Correl_3D_phidiff_num = new double*** [n_Kphi];
+         Correl_3D_phidiff_denorm = new double*** [n_Kphi];
+         for(int l = 0; l < n_Kphi; l++)
          {
-            Correl_1D_phidiff_num = new double** [n_Kphi];
-            Correl_1D_phidiff_denorm = new double** [n_Kphi];
-            for(int i = 0; i < n_Kphi; i++)
+            Correl_3D_phidiff_num[l] = new double** [qnpts];
+            Correl_3D_phidiff_denorm[l] = new double** [qnpts];
+            for(int i=0; i<qnpts; i++)
             {
-                Correl_1D_phidiff_num[i] = new double* [ndir];
-                Correl_1D_phidiff_denorm[i] = new double* [ndir];
-                for(int j = 0; j < ndir; j++)
-                {
-                    Correl_1D_phidiff_num[i][j] = new double [qnpts];
-                    Correl_1D_phidiff_denorm[i][j] = new double [qnpts];
-                    for(int k = 0; k < qnpts; k++)
-                    {
-                        Correl_1D_phidiff_num[i][j][k] = 0.0;
-                        Correl_1D_phidiff_denorm[i][j][k] = 0.0;
-                    }
-                }
-            }
-         }
-         else
-         {
-            Correl_3D_phidiff_num = new double*** [n_Kphi];
-            Correl_3D_phidiff_denorm = new double*** [n_Kphi];
-            for(int l = 0; l < n_Kphi; l++)
-            {
-               Correl_3D_phidiff_num[l] = new double** [qnpts];
-               Correl_3D_phidiff_denorm[l] = new double** [qnpts];
-               for(int i=0; i<qnpts; i++)
+               Correl_3D_phidiff_num[l][i] = new double* [qnpts];
+               Correl_3D_phidiff_denorm[l][i] = new double* [qnpts];
+               for(int j=0; j<qnpts; j++)
                {
-                  Correl_3D_phidiff_num[l][i] = new double* [qnpts];
-                  Correl_3D_phidiff_denorm[l][i] = new double* [qnpts];
-                  for(int j=0; j<qnpts; j++)
+                  Correl_3D_phidiff_num[l][i][j] = new double [qnpts];
+                  Correl_3D_phidiff_denorm[l][i][j] = new double [qnpts];
+                  for(int k=0; k<qnpts; k++)
                   {
-                     Correl_3D_phidiff_num[l][i][j] = new double [qnpts];
-                     Correl_3D_phidiff_denorm[l][i][j] = new double [qnpts];
-                     for(int k=0; k<qnpts; k++)
-                     {
-                        Correl_3D_phidiff_num[l][i][j][k] = 0.0;
-                        Correl_3D_phidiff_denorm[l][i][j][k] = 0.0;
-                     }
+                     Correl_3D_phidiff_num[l][i][j][k] = 0.0;
+                     Correl_3D_phidiff_denorm[l][i][j][k] = 0.0;
                   }
                }
             }
@@ -227,7 +245,7 @@ HBT::~HBT()
    delete [] q_side;
    delete [] q_long;
 
-   if(flag_MC == 1)
+   if(qspace_sample_mode == 3)
    {
        delete [] q_out_MC;
        delete [] q_side_MC;
@@ -248,73 +266,92 @@ HBT::~HBT()
            delete [] Correl_MC_phidiff_denorm;
        }
    }
+   else if(qspace_sample_mode == 0)
+   {
+      if(azimuthal_flag == 0)
+      {
+         for(int i = 0; i < ndir; i++)
+         {
+             delete [] Correl_1D_num[i];
+             delete [] Correl_1D_denorm[i];
+         }
+         delete [] Correl_1D_num;
+         delete [] Correl_1D_denorm;
+      }
+      else
+      {
+         for(int i = 0; i < n_Kphi; i++)
+         {
+            for(int j = 0; j < ndir; j++)
+            {
+                delete [] Correl_1D_phidiff_num[i][j];
+                delete [] Correl_1D_phidiff_denorm[i][j];
+            }
+            delete [] Correl_1D_phidiff_num[i];
+            delete [] Correl_1D_phidiff_denorm[i];
+         }
+         delete [] Correl_1D_phidiff_num;
+         delete [] Correl_1D_phidiff_denorm;
+      }
+   }
+   else if (qspace_sample_mode == 1)
+   {
+       delete [] q_out_2p1;
+       delete [] q_side_2p1;
+       delete [] q_long_2p1;
+       if(azimuthal_flag == 0)
+       {
+           delete [] Correl_2p1_num;
+           delete [] Correl_2p1_denorm;
+       }
+       else
+       {
+           for(int i = 0; i < n_Kphi; i++)
+           {
+               delete [] Correl_2p1_phidiff_num[i];
+               delete [] Correl_2p1_phidiff_denorm[i];
+           }
+           delete [] Correl_2p1_phidiff_num;
+           delete [] Correl_2p1_phidiff_denorm;
+       }
+
+   }
    else
    {
       if(azimuthal_flag == 0)
       {
-         if(flag_1D_projection == 1)
+         for(int i=0; i<qnpts; i++)
          {
-            for(int i = 0; i < ndir; i++)
+            for(int j=0; j< qnpts; j++)
             {
-                delete [] Correl_1D_num[i];
-                delete [] Correl_1D_denorm[i];
+                delete [] Correl_3D_num[i][j];
+                delete [] Correl_3D_denorm[i][j];
             }
-            delete [] Correl_1D_num;
-            delete [] Correl_1D_denorm;
+            delete [] Correl_3D_num[i];
+            delete [] Correl_3D_denorm[i];
          }
-         else
-         {
-            for(int i=0; i<qnpts; i++)
-            {
-               for(int j=0; j< qnpts; j++)
-               {
-                   delete [] Correl_3D_num[i][j];
-                   delete [] Correl_3D_denorm[i][j];
-               }
-               delete [] Correl_3D_num[i];
-               delete [] Correl_3D_denorm[i];
-            }
-            delete [] Correl_3D_num;
-            delete [] Correl_3D_denorm;
-         }
+         delete [] Correl_3D_num;
+         delete [] Correl_3D_denorm;
       }
       else
       {
-         if(flag_1D_projection == 1)
+         for(int i = 0; i < n_Kphi; i++)
          {
-            for(int i = 0; i < n_Kphi; i++)
+            for(int j = 0; j < qnpts; j++)
             {
-               for(int j = 0; j < ndir; j++)
+               for(int k = 0; k < qnpts; k++)
                {
-                   delete [] Correl_1D_phidiff_num[i][j];
-                   delete [] Correl_1D_phidiff_denorm[i][j];
+                  delete [] Correl_3D_phidiff_num[i][j][k];
+                  delete [] Correl_3D_phidiff_denorm[i][j][k];
                }
-               delete [] Correl_1D_phidiff_num[i];
-               delete [] Correl_1D_phidiff_denorm[i];
+               delete [] Correl_3D_phidiff_num[i][j];
+               delete [] Correl_3D_phidiff_denorm[i][j];
             }
-            delete [] Correl_1D_phidiff_num;
-            delete [] Correl_1D_phidiff_denorm;
+            delete [] Correl_3D_phidiff_num[i];
+            delete [] Correl_3D_phidiff_denorm[i];
          }
-         else
-         {
-            for(int i = 0; i < n_Kphi; i++)
-            {
-               for(int j = 0; j < qnpts; j++)
-               {
-                  for(int k = 0; k < qnpts; k++)
-                  {
-                     delete [] Correl_3D_phidiff_num[i][j][k];
-                     delete [] Correl_3D_phidiff_denorm[i][j][k];
-                  }
-                  delete [] Correl_3D_phidiff_num[i][j];
-                  delete [] Correl_3D_phidiff_denorm[i][j];
-               }
-               delete [] Correl_3D_phidiff_num[i];
-               delete [] Correl_3D_phidiff_denorm[i];
-            }
-            delete [] Correl_3D_phidiff_num;
-            delete [] Correl_3D_phidiff_denorm;
-         }
+         delete [] Correl_3D_phidiff_num;
+         delete [] Correl_3D_phidiff_denorm;
       }
    }
    return;
@@ -349,24 +386,26 @@ void HBT::calculate_azimuthal_dependent_HBT_radii(double y)
 
    for(int iKT = 0; iKT < n_KT; iKT++)
    {
-       if(flag_MC == 1)
-       {
-          Cal_azimuthal_dependent_correlationfunction_MC(iKT, y);
-          Output_Correlationfunction_azimuthal_dependent_MC(iKT);
-       }
-       else
-       {
-          if(flag_1D_projection == 1)
-          {
-             Cal_azimuthal_dependent_correlationfunction_1D(iKT, y);
-             Output_Correlationfunction_azimuthal_dependent_1D(iKT);
-          }
-          else
-          {
-             Cal_azimuthal_dependent_correlationfunction_3D(iKT, y);
-             Output_Correlationfunction_azimuthal_dependent_3D(iKT);
-          }
-       }
+      if(qspace_sample_mode == 3)
+      {
+         Cal_azimuthal_dependent_correlationfunction_MC(iKT, y);
+         Output_Correlationfunction_azimuthal_dependent_MC(iKT);
+      }
+      else if(qspace_sample_mode == 0)
+      {
+         Cal_azimuthal_dependent_correlationfunction_1D(iKT, y);
+         Output_Correlationfunction_azimuthal_dependent_1D(iKT);
+      }
+      else if (qspace_sample_mode == 1)
+      {
+         Cal_azimuthal_dependent_correlationfunction_2p1D(iKT, y);
+         Output_Correlationfunction_azimuthal_dependent_2p1D(iKT);
+      }
+      else
+      {
+         Cal_azimuthal_dependent_correlationfunction_3D(iKT, y);
+         Output_Correlationfunction_azimuthal_dependent_3D(iKT);
+      }
    }
 }
 
@@ -378,24 +417,26 @@ void HBT::calculate_azimuthal_averaged_HBT_radii(double y)
 
    for(int iKT = 0; iKT < n_KT; iKT++)
    {
-       if(flag_MC == 1)
-       {
-           Cal_azimuthal_averaged_correlationfunction_MC(iKT, y);
-           Output_Correlationfunction_MC(iKT);
-       }
-       else
-       {
-           if(flag_1D_projection == 1)
-           {
-               Cal_azimuthal_averaged_correlationfunction_1D(iKT, y);
-               Output_Correlationfunction_1D(iKT);
-           }
-           else
-           {
-               Cal_azimuthal_averaged_correlationfunction_3D(iKT, y);
-               Output_Correlationfunction_3D(iKT);
-           }
-       }
+      if(qspace_sample_mode == 3)
+      {
+          Cal_azimuthal_averaged_correlationfunction_MC(iKT, y);
+          Output_Correlationfunction_MC(iKT);
+      }
+      else if (qspace_sample_mode == 0)
+      {
+          Cal_azimuthal_averaged_correlationfunction_1D(iKT, y);
+          Output_Correlationfunction_1D(iKT);
+      }
+      else if (qspace_sample_mode == 1)
+      {
+          Cal_azimuthal_averaged_correlationfunction_2p1D(iKT, y);
+          Output_Correlationfunction_2p1D(iKT);
+      }
+      else
+      {
+          Cal_azimuthal_averaged_correlationfunction_3D(iKT, y);
+          Output_Correlationfunction_3D(iKT);
+      }
    }
 }
 
@@ -405,23 +446,25 @@ void HBT::calculate_azimuthal_averaged_KT_integrated_HBT_radii(double y)
    
    SetEmissionData(FOsurf_ptr, y);
 
-   if(flag_MC == 1)
+   if(qspace_sample_mode == 3)
    {
        Cal_azimuthal_averaged_KT_inte_correlationfunction_MC(y);
        Output_Correlationfunction_MC(-1);
    }
+   else if (qspace_sample_mode == 0)
+   {
+       Cal_azimuthal_averaged_KT_inte_correlationfunction_1D(y);
+       Output_Correlationfunction_1D(-1);
+   }
+   else if (qspace_sample_mode == 1)
+   {
+       Cal_azimuthal_averaged_KT_inte_correlationfunction_2p1D(y);
+       Output_Correlationfunction_2p1D(-1);
+   }
    else
    {
-       if(flag_1D_projection == 1)
-       {
-           Cal_azimuthal_averaged_KT_inte_correlationfunction_1D(y);
-           Output_Correlationfunction_1D(-1);
-       }
-       else
-       {
-           Cal_azimuthal_averaged_KT_inte_correlationfunction_3D(y);
-           Output_Correlationfunction_3D(-1);
-       }
+       Cal_azimuthal_averaged_KT_inte_correlationfunction_3D(y);
+       Output_Correlationfunction_3D(-1);
    }
 }
 
@@ -431,23 +474,25 @@ void HBT::calculate_azimuthal_dependent_KT_integrated_HBT_radii(double y)
    
    SetEmissionData(FOsurf_ptr, y);
 
-   if(flag_MC == 1)
+   if(qspace_sample_mode == 3)
    {
        Cal_azimuthal_dependent_KT_inte_correlationfunction_MC(y);
        Output_Correlationfunction_azimuthal_dependent_MC(-1);
    }
+   else if(qspace_sample_mode == 0)
+   {
+       Cal_azimuthal_dependent_KT_inte_correlationfunction_1D(y);
+       Output_Correlationfunction_azimuthal_dependent_1D(-1);
+   }
+   else if (qspace_sample_mode == 1)
+   {
+       Cal_azimuthal_dependent_KT_inte_correlationfunction_2p1D(y);
+       Output_Correlationfunction_azimuthal_dependent_2p1D(-1);
+   }
    else
    {
-       if(flag_1D_projection == 1)
-       {
-           Cal_azimuthal_dependent_KT_inte_correlationfunction_1D(y);
-           Output_Correlationfunction_azimuthal_dependent_1D(-1);
-       }
-       else
-       {
-           Cal_azimuthal_dependent_KT_inte_correlationfunction_3D(y);
-           Output_Correlationfunction_azimuthal_dependent_3D(-1);
-       }
+       Cal_azimuthal_dependent_KT_inte_correlationfunction_3D(y);
+       Output_Correlationfunction_azimuthal_dependent_3D(-1);
    }
 
 }
@@ -1489,6 +1534,151 @@ void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_3D(double K_y)
    return;
 }
 
+void HBT::Cal_azimuthal_averaged_correlationfunction_2p1D(int iKT, double K_y)
+{
+   double hbarC_inv = 1./hbarC;
+   if(fabs(K_y) > 1e-16) 
+   {
+       cout<<"not support for y not equals 0 yet!" << endl;
+       return;
+   }
+
+   double K_T = KT_array[iKT];
+   
+   cout << "generating correlation function in 2+1D for K_T = " 
+        << K_T << " GeV ... " << endl;
+
+   double mass = particle_ptr[particle_id].mass;
+   
+   double *cosK_phi = new double [n_Kphi];
+   double *sinK_phi = new double [n_Kphi];
+   for(int iphi = 0; iphi < n_Kphi; iphi++)
+   {
+      cosK_phi[iphi] = cos(Kphi[iphi]);
+      sinK_phi[iphi] = sin(Kphi[iphi]);
+   }
+   
+   double spectra = 0.0e0;
+   for(int k = 0; k < Emissionfunction_length; k++)
+   {
+      for(int iphi = 0; iphi < n_Kphi; iphi++)
+      {
+         double ss  = emission_S_K[k].data[iKT][iphi]*Kphi_weight[iphi];
+         spectra += ss*2;
+      }
+   }
+
+   double local_q_out, local_q_side, local_q_long;
+   int idx = 0;
+   local_q_long = 0.0;
+   for(int i = 0; i < qnpts; i++)
+   {
+      local_q_out = q_out[i];
+      for(int j = 0; j < qnpts; j++)
+      {
+         local_q_side = q_side[j];
+
+         q_out_2p1[idx] = local_q_out;
+         q_side_2p1[idx] = local_q_side;
+         q_long_2p1[idx] = local_q_long;
+
+         cout << "q_out = " << local_q_out << " GeV, "
+              << "q_side = " << local_q_side << " GeV, "
+              << "q_long = " << local_q_long << " GeV... " << endl;
+
+         double integ1 = 0.0;                         
+         double integ2 = 0.0;
+
+     	   double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+         double E1sq = xsi + K_T*local_q_out;
+         double E2sq = xsi - K_T*local_q_out;
+         double qt = sqrt(E1sq) - sqrt(E2sq);
+         double qz = local_q_long;
+
+         for(int m = 0; m < Emissionfunction_length; m++)
+         {
+            double tpt = emission_S_K[m].t;
+            double xpt = emission_S_K[m].x;
+            double ypt = emission_S_K[m].y;
+            double zpt = emission_S_K[m].z;
+            for(int iphi = 0; iphi < n_Kphi; iphi++)
+            {
+               double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+               double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+               double ss = emission_S_K[m].data[iKT][iphi]*Kphi_weight[iphi];
+            
+               double temp_arg = tpt*qt - xpt*qx - ypt*qy;
+               for(int ii=0; ii<2; ii++)
+               {
+                  zpt = zpt*(-1);
+                  double arg = (temp_arg - qz*zpt)*hbarC_inv;
+                  integ1 += cos(arg)*ss;
+                  integ2 += sin(arg)*ss;
+               }
+            }
+         }
+         Correl_2p1_num[idx] = integ1*integ1+integ2*integ2;
+         Correl_2p1_denorm[idx] = spectra*spectra;
+         idx++;
+      }
+   }
+
+   // along q_long axis
+   local_q_out = 0.0;
+   local_q_side = 0.0;
+   for(int i = 0; i < qnpts; i++)
+   {
+      local_q_long = q_long[i];
+      q_out_2p1[idx] = local_q_out;
+      q_side_2p1[idx] = local_q_side;
+      q_long_2p1[idx] = local_q_long;
+
+      cout << "q_out = " << local_q_out << " GeV, "
+           << "q_side = " << local_q_side << " GeV, "
+           << "q_long = " << local_q_long << " GeV... " << endl;
+
+      double integ1 = 0.0;                         
+      double integ2 = 0.0;
+
+     	double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+      double E1sq = xsi + K_T*local_q_out;
+      double E2sq = xsi - K_T*local_q_out;
+      double qt = sqrt(E1sq) - sqrt(E2sq);
+      double qz = local_q_long;
+
+      for(int m = 0; m < Emissionfunction_length; m++)
+      {
+         double tpt = emission_S_K[m].t;
+         double xpt = emission_S_K[m].x;
+         double ypt = emission_S_K[m].y;
+         double zpt = emission_S_K[m].z;
+         for(int iphi = 0; iphi < n_Kphi; iphi++)
+         {
+            double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+            double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+            double ss = emission_S_K[m].data[iKT][iphi]*Kphi_weight[iphi];
+         
+            double temp_arg = tpt*qt - xpt*qx - ypt*qy;
+            for(int ii=0; ii<2; ii++)
+            {
+               zpt = zpt*(-1);
+               double arg = (temp_arg - qz*zpt)*hbarC_inv;
+               integ1 += cos(arg)*ss;
+               integ2 += sin(arg)*ss;
+            }
+         }
+      }
+      Correl_2p1_num[idx] = integ1*integ1+integ2*integ2;
+      Correl_2p1_denorm[idx] = spectra*spectra;
+      idx++;
+   }
+
+   delete [] cosK_phi;
+   delete [] sinK_phi;
+
+   return;
+}
+
 void HBT::Cal_azimuthal_averaged_correlationfunction_MC(int iKT, double K_y)
 {
    double hbarC_inv = 1./hbarC;
@@ -1589,6 +1779,161 @@ void HBT::Cal_azimuthal_averaged_correlationfunction_MC(int iKT, double K_y)
    return;
 }
 
+void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_2p1D(double K_y)
+{ 
+   double hbarC_inv = 1./hbarC;
+   if(fabs(K_y) > 1e-16)
+   {
+       cout<<"not support for y not equals 0 yet!" << endl;
+       return;
+   }
+
+   cout << "generating correlation function in 2+1D ... " << endl;
+
+   double mass = particle_ptr[particle_id].mass;
+   
+   double *cosK_phi = new double [n_Kphi];
+   double *sinK_phi = new double [n_Kphi];
+   for(int iphi = 0; iphi < n_Kphi; iphi++)
+   {
+      cosK_phi[iphi] = cos(Kphi[iphi]);
+      sinK_phi[iphi] = sin(Kphi[iphi]);
+   }
+   
+   double spectra = 0.0e0;
+   for(int k = 0; k < Emissionfunction_length; k++)
+   {
+      for(int iKT = 0; iKT < n_KT; iKT++)
+      {
+         for(int iphi = 0; iphi < n_Kphi; iphi++)
+         {
+            double ss  = emission_S_K[k].data[iKT][iphi]*Kphi_weight[iphi]*KT_array[iKT]*KT_weight[iKT];
+            spectra += ss*2;
+         }
+      }
+   }
+
+   int idx = 0;
+   double local_q_out, local_q_side, local_q_long;
+   local_q_long = 0.0;
+   for(int i = 0; i < qnpts; i++)
+   {
+      local_q_out = q_out[i];
+      for(int j = 0; j < qnpts; j++)
+      {
+         local_q_side = q_side[i];
+
+         q_out_2p1[idx] = local_q_out;
+         q_side_2p1[idx] = local_q_side;
+         q_long_2p1[idx] = local_q_long;
+
+         cout << "q_out = " << local_q_out << " GeV, "
+              << "q_side = " << local_q_side << " GeV, "
+              << "q_long = " << local_q_long << " GeV... " << endl;
+
+         double integ1 = 0.0;                         
+         double integ2 = 0.0;
+         double sum = 0.0;
+
+         for(int m = 0; m < Emissionfunction_length; m++)
+         {
+            double tpt = emission_S_K[m].t;
+            double xpt = emission_S_K[m].x;
+            double ypt = emission_S_K[m].y;
+            double zpt = emission_S_K[m].z;
+
+            for(int iKT = 0; iKT < n_KT; iKT++)
+            {
+                double K_T = KT_array[iKT];
+                double KT_weight_local = KT_weight[iKT];
+     	          double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+                double E1sq = xsi + K_T*local_q_out;
+                double E2sq = xsi - K_T*local_q_out;
+                double qt = sqrt(E1sq) - sqrt(E2sq);
+                double qz = local_q_long;
+
+                for(int iphi = 0; iphi < n_Kphi; iphi++)
+                {
+                   double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+                   double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+                   double ss = emission_S_K[m].data[iKT][iphi]*Kphi_weight[iphi]*K_T*KT_weight_local;
+                   double temp_arg = tpt*qt - xpt*qx - ypt*qy;
+                   for(int ii=0; ii<2; ii++)
+                   {
+                      zpt = zpt*(-1);
+                      double arg = (temp_arg - qz*zpt)*hbarC_inv;
+                      integ1 += cos(arg)*ss;
+                      integ2 += sin(arg)*ss;
+                   }
+                }
+             }
+         }
+         Correl_2p1_num[idx] = integ1*integ1+integ2*integ2;
+         Correl_2p1_denorm[idx] = spectra*spectra;
+         idx++;
+      }
+   }
+   
+   local_q_out = 0.0;
+   local_q_side = 0.0;
+   for(int i = 0; i < qnpts; i++)
+   {
+      local_q_long = q_long[i];
+
+      q_out_2p1[idx] = local_q_out;
+      q_side_2p1[idx] = local_q_side;
+      q_long_2p1[idx] = local_q_long;
+
+      cout << "q_out = " << local_q_out << " GeV, "
+           << "q_side = " << local_q_side << " GeV, "
+           << "q_long = " << local_q_long << " GeV... " << endl;
+
+      double integ1 = 0.0;                         
+      double integ2 = 0.0;
+      for(int m = 0; m < Emissionfunction_length; m++)
+      {
+         double tpt = emission_S_K[m].t;
+         double xpt = emission_S_K[m].x;
+         double ypt = emission_S_K[m].y;
+         double zpt = emission_S_K[m].z;
+
+         for(int iKT = 0; iKT < n_KT; iKT++)
+         {
+             double K_T = KT_array[iKT];
+             double KT_weight_local = KT_weight[iKT];
+     	       double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+             double E1sq = xsi + K_T*local_q_out;
+             double E2sq = xsi - K_T*local_q_out;
+             double qt = sqrt(E1sq) - sqrt(E2sq);
+             double qz = local_q_long;
+
+             for(int iphi = 0; iphi < n_Kphi; iphi++)
+             {
+                double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+                double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+                double ss = emission_S_K[m].data[iKT][iphi]*Kphi_weight[iphi]*K_T*KT_weight_local;
+                double temp_arg = tpt*qt - xpt*qx - ypt*qy;
+                for(int ii=0; ii<2; ii++)
+                {
+                   zpt = zpt*(-1);
+                   double arg = (temp_arg - qz*zpt)*hbarC_inv;
+                   integ1 += cos(arg)*ss;
+                   integ2 += sin(arg)*ss;
+                }
+             }
+          }
+      }
+      Correl_2p1_num[idx] = integ1*integ1+integ2*integ2;
+      Correl_2p1_denorm[idx] = spectra*spectra;
+      idx++;
+   }
+
+   delete [] cosK_phi;
+   delete [] sinK_phi;
+
+   return;
+}
+
 void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_MC(double K_y)
 { 
    double hbarC_inv = 1./hbarC;
@@ -1650,7 +1995,6 @@ void HBT::Cal_azimuthal_averaged_KT_inte_correlationfunction_MC(double K_y)
 
        double integ1 = 0.0;                         
        double integ2 = 0.0;
-       double sum = 0.0;
 
        for(int m = 0; m < Emissionfunction_length; m++)
        {
@@ -1982,6 +2326,150 @@ void HBT::Cal_azimuthal_dependent_correlationfunction_MC(int iKT, double K_y)
    return;
 }
 
+void HBT::Cal_azimuthal_dependent_correlationfunction_2p1D(int iKT, double K_y)
+{
+   double hbarC_inv = 1./hbarC;
+   if(fabs(K_y) > 1e-16)
+   {
+       cout<<"not support for y not equals 0 yet!" << endl;
+       return;
+   }
+   
+   double K_T = KT_array[iKT];
+   cout << "generating correlation function in 2+1D for K_T = " 
+        << K_T << " GeV ... " << endl;
+
+   double mass = particle_ptr[particle_id].mass;
+   
+   double *cosK_phi = new double [n_Kphi];
+   double *sinK_phi = new double [n_Kphi];
+   for(int iphi = 0; iphi < n_Kphi; iphi++)
+   {
+      cosK_phi[iphi] = cos(Kphi[iphi]);
+      sinK_phi[iphi] = sin(Kphi[iphi]);
+   }
+   
+   double *spectra = new double [n_Kphi];
+   for(int iphi = 0; iphi < n_Kphi; iphi++)
+   {
+      double ss = 0.0;
+      for(int k = 0; k < Emissionfunction_length; k++)
+         ss += emission_S_K[k].data[iKT][iphi];
+      spectra[iphi] = ss*2;
+   }
+
+   int idx = 0;
+   double local_q_out, local_q_side, local_q_long;
+   local_q_long = 0.0;
+   for(int i = 0; i < qnpts; i++)
+   {
+      local_q_out = q_out[i];
+      for(int j = 0; j < qnpts; j++)
+      {
+         local_q_side = q_side[j];
+
+         q_out_2p1[idx] = local_q_out;
+         q_side_2p1[idx] = local_q_side;
+         q_long_2p1[idx] = local_q_long;
+
+         cout << "q_out = " << local_q_out << " GeV, "
+              << "q_side = " << local_q_side << " GeV, "
+              << "q_long = " << local_q_long << " GeV... " << endl;
+
+     	   double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+         double E1sq = xsi + K_T*local_q_out;
+         double E2sq = xsi - K_T*local_q_out;
+         double qt = sqrt(E1sq) - sqrt(E2sq);
+         double qz = local_q_long;
+
+         for(int iphi = 0; iphi < n_Kphi; iphi++)
+         {
+            double integ1 = 0.0;                         
+            double integ2 = 0.0;
+
+            double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+            double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+            
+            for(int m = 0; m < Emissionfunction_length; m++)
+            {
+               double ss = emission_S_K[m].data[iKT][iphi];
+               double tpt = emission_S_K[m].t;
+               double xpt = emission_S_K[m].x;
+               double ypt = emission_S_K[m].y;
+               double zpt = emission_S_K[m].z;
+
+               for(int ii=0; ii<2; ii++)
+               {
+                  zpt = zpt*(-1);
+                  double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
+                  integ1 += cos(arg)*ss;
+                  integ2 += sin(arg)*ss;
+               }
+            }
+            Correl_2p1_phidiff_num[iphi][idx] = integ1*integ1+integ2*integ2;
+            Correl_2p1_phidiff_denorm[iphi][idx] = spectra[iphi]*spectra[iphi];
+         }
+         idx++;
+      }
+   }
+
+   local_q_out = 0.0;
+   local_q_side = 0.0;
+   for(int i = 0; i < qnpts; i++)
+   {
+      local_q_long = q_long[i];
+         
+      q_out_2p1[idx] = local_q_out;
+      q_side_2p1[idx] = local_q_side;
+      q_long_2p1[idx] = local_q_long;
+
+      cout << "q_out = " << local_q_out << " GeV, "
+           << "q_side = " << local_q_side << " GeV, "
+           << "q_long = " << local_q_long << " GeV... " << endl;
+
+     	double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+      double E1sq = xsi + K_T*local_q_out;
+      double E2sq = xsi - K_T*local_q_out;
+      double qt = sqrt(E1sq) - sqrt(E2sq);
+      double qz = local_q_long;
+
+      for(int iphi = 0; iphi < n_Kphi; iphi++)
+      {
+         double integ1 = 0.0;                         
+         double integ2 = 0.0;
+
+         double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+         double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+         
+         for(int m = 0; m < Emissionfunction_length; m++)
+         {
+            double ss = emission_S_K[m].data[iKT][iphi];
+            double tpt = emission_S_K[m].t;
+            double xpt = emission_S_K[m].x;
+            double ypt = emission_S_K[m].y;
+            double zpt = emission_S_K[m].z;
+
+            for(int ii=0; ii<2; ii++)
+            {
+               zpt = zpt*(-1);
+               double arg = (tpt*qt - (qx*xpt + qy*ypt + qz*zpt))/hbarC;
+               integ1 += cos(arg)*ss;
+               integ2 += sin(arg)*ss;
+            }
+         }
+         Correl_2p1_phidiff_num[iphi][idx] = integ1*integ1+integ2*integ2;
+         Correl_2p1_phidiff_denorm[iphi][idx] = spectra[iphi]*spectra[iphi];
+      }
+      idx++;
+   }
+
+   delete [] cosK_phi;
+   delete [] sinK_phi;
+   delete [] spectra;
+
+   return;
+}
+
 void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_MC(double K_y)
 {
    double hbarC_inv = 1./hbarC;
@@ -2080,6 +2568,167 @@ void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_MC(double K_y)
           Correl_MC_phidiff_num[iphi][i] = integ1*integ1+integ2*integ2;
           Correl_MC_phidiff_denorm[iphi][i] = spectra[iphi]*spectra[iphi];
        }
+   }
+
+   delete [] cosK_phi;
+   delete [] sinK_phi;
+   delete [] spectra;
+
+   return;
+}
+
+void HBT::Cal_azimuthal_dependent_KT_inte_correlationfunction_2p1D(double K_y)
+{
+   double hbarC_inv = 1./hbarC;
+   if(fabs(K_y) > 1e-16)
+   {
+       cout<<"not support for y not equals 0 yet!" << endl;
+       return;
+   }
+   
+   cout << "generating correlation function in 2+1D ... " << endl;
+
+   double mass = particle_ptr[particle_id].mass;
+   
+   double *cosK_phi = new double [n_Kphi];
+   double *sinK_phi = new double [n_Kphi];
+   for(int iphi = 0; iphi < n_Kphi; iphi++)
+   {
+      cosK_phi[iphi] = cos(Kphi[iphi]);
+      sinK_phi[iphi] = sin(Kphi[iphi]);
+   }
+   
+   double *spectra = new double [n_Kphi];
+   for(int iphi = 0; iphi < n_Kphi; iphi++)
+   {
+      double ss = 0.0;
+      for(int iKT = 0; iKT < n_KT; iKT++)
+      {
+          double KT_local = KT_array[iKT];
+          double KT_weight_local = KT_weight[iKT];
+          for(int k = 0; k < Emissionfunction_length; k++)
+              ss += emission_S_K[k].data[iKT][iphi]*KT_local*KT_weight_local;
+      }
+      spectra[iphi] = ss*2;
+   }
+
+   int idx = 0;
+   double local_q_out, local_q_side, local_q_long;
+   local_q_long = 0.0;
+   for(int i = 0; i < qnpts; i++)
+   {
+      local_q_out = q_out[i];
+      for(int j = 0; j < qnpts; j++)
+      {
+         local_q_side = q_side[j];
+
+         q_out_2p1[idx] = local_q_out;
+         q_side_2p1[idx] = local_q_side;
+         q_long_2p1[idx] = local_q_long;
+
+         cout << "q_out = " << local_q_out << " GeV, "
+              << "q_side = " << local_q_side << " GeV, "
+              << "q_long = " << local_q_long << " GeV... " << endl;
+
+         for(int iphi = 0; iphi < n_Kphi; iphi++)
+         {
+            double integ1 = 0.0;                         
+            double integ2 = 0.0;
+
+            double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+            double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+
+            for(int m = 0; m < Emissionfunction_length; m++)
+            {
+               double tpt = emission_S_K[m].t;
+               double xpt = emission_S_K[m].x;
+               double ypt = emission_S_K[m].y;
+               double zpt = emission_S_K[m].z;
+               for(int iKT = 0; iKT < n_KT; iKT++)
+               {
+                   double K_T = KT_array[iKT];
+                   double KT_weight_local = KT_weight[iKT];
+
+     	             double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+                   double E1sq = xsi + K_T*local_q_out;
+                   double E2sq = xsi - K_T*local_q_out;
+                   double qt = sqrt(E1sq) - sqrt(E2sq);
+                   double qz = local_q_long;
+                   
+                   double ss  = emission_S_K[m].data[iKT][iphi]*K_T*KT_weight_local;
+
+                   double temp_arg = tpt*qt - qx*xpt - qy*ypt;
+                   for(int ii=0; ii<2; ii++)
+                   {
+                      zpt = zpt*(-1);
+                      double arg = (temp_arg - qz*zpt)*hbarC_inv;
+                      integ1 += cos(arg)*ss;
+                      integ2 += sin(arg)*ss;
+                   }
+                }
+            }
+            Correl_2p1_phidiff_num[iphi][idx] = integ1*integ1+integ2*integ2;
+            Correl_2p1_phidiff_denorm[iphi][idx] = spectra[iphi]*spectra[iphi];
+         }
+         idx++;
+      }
+   }
+   
+   local_q_out = 0.0;
+   local_q_side = 0.0;
+   for(int i = 0; i < qnpts; i++)
+   {
+      local_q_long = q_long[i];
+
+      q_out_2p1[idx] = local_q_out;
+      q_side_2p1[idx] = local_q_side;
+      q_long_2p1[idx] = local_q_long;
+
+      cout << "q_out = " << local_q_out << " GeV, "
+           << "q_side = " << local_q_side << " GeV, "
+           << "q_long = " << local_q_long << " GeV... " << endl;
+
+      for(int iphi = 0; iphi < n_Kphi; iphi++)
+      {
+         double integ1 = 0.0;                         
+         double integ2 = 0.0;
+
+         double qx = local_q_out*cosK_phi[iphi] - local_q_side*sinK_phi[iphi];
+         double qy = local_q_side*cosK_phi[iphi] + local_q_out*sinK_phi[iphi];
+
+         for(int m = 0; m < Emissionfunction_length; m++)
+         {
+            double tpt = emission_S_K[m].t;
+            double xpt = emission_S_K[m].x;
+            double ypt = emission_S_K[m].y;
+            double zpt = emission_S_K[m].z;
+            for(int iKT = 0; iKT < n_KT; iKT++)
+            {
+                double K_T = KT_array[iKT];
+                double KT_weight_local = KT_weight[iKT];
+
+     	          double xsi = K_T*K_T + mass*mass + (local_q_out*local_q_out + local_q_side*local_q_side + local_q_long*local_q_long)/4.0;  //Set Xsi
+                double E1sq = xsi + K_T*local_q_out;
+                double E2sq = xsi - K_T*local_q_out;
+                double qt = sqrt(E1sq) - sqrt(E2sq);
+                double qz = local_q_long;
+                
+                double ss  = emission_S_K[m].data[iKT][iphi]*K_T*KT_weight_local;
+
+                double temp_arg = tpt*qt - qx*xpt - qy*ypt;
+                for(int ii=0; ii<2; ii++)
+                {
+                   zpt = zpt*(-1);
+                   double arg = (temp_arg - qz*zpt)*hbarC_inv;
+                   integ1 += cos(arg)*ss;
+                   integ2 += sin(arg)*ss;
+                }
+             }
+         }
+         Correl_2p1_phidiff_num[iphi][idx] = integ1*integ1+integ2*integ2;
+         Correl_2p1_phidiff_denorm[iphi][idx] = spectra[iphi]*spectra[iphi];
+      }
+      idx++;
    }
 
    delete [] cosK_phi;
@@ -2332,6 +2981,33 @@ void HBT::Output_Correlationfunction_MC(int iKT)
    return;
 }
 
+void HBT::Output_Correlationfunction_2p1D(int iKT)
+{
+   double error = 1e-4;
+   ostringstream oCorrelfun_2p1_stream;
+   if(iKT < 0)
+   {
+       double KT_min = paraRdr->getVal("KT_min");
+       double KT_max = paraRdr->getVal("KT_max");
+       oCorrelfun_2p1_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << KT_min << "_" << KT_max << ".dat";
+   }
+   else
+       oCorrelfun_2p1_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << KT_array[iKT] << ".dat";
+
+   ofstream oCorrelfun_2p1;
+   oCorrelfun_2p1.open(oCorrelfun_2p1_stream.str().c_str());
+   int length = qnpts*qnpts + qnpts;
+   for(int i = 0; i < length; i++)
+       oCorrelfun_2p1 << scientific << setprecision(7) << setw(15)
+                      << q_out_2p1[i] << "  " << q_side_2p1[i] << "  " 
+                      << q_long_2p1[i] << "  " << Correl_2p1_num[i] << "  " 
+                      << Correl_2p1_denorm[i] << "  "
+                      << Correl_2p1_num[i]/Correl_2p1_denorm[i]
+                      << "  " << error << endl;
+   oCorrelfun_2p1.close();
+   return;
+}
+
 void HBT::Output_Correlationfunction_azimuthal_dependent_MC(int iKT)
 {
    double error = 1e-4;   // "fake" error
@@ -2358,6 +3034,37 @@ void HBT::Output_Correlationfunction_azimuthal_dependent_MC(int iKT)
                          << Correl_MC_phidiff_num[iphi][i]/Correl_MC_phidiff_denorm[iphi][i]
                          << "  " << error << endl;
        oCorrelfun_MC.close();
+   }
+   return;
+}
+
+void HBT::Output_Correlationfunction_azimuthal_dependent_2p1D(int iKT)
+{
+   double error = 1e-4;   // "fake" error
+   for(int iphi = 0; iphi < n_Kphi; iphi++)
+   {
+       ostringstream oCorrelfun_2p1_stream;
+       if(iKT < 0)
+       {
+           double KT_min = paraRdr->getVal("KT_min");
+           double KT_max = paraRdr->getVal("KT_max");
+           oCorrelfun_2p1_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << KT_min << "_" << KT_max << "_Kphi_" << Kphi[iphi]-Psi_ev << ".dat";
+       }
+       else
+           oCorrelfun_2p1_stream << path << "/correlfunct" << "_" << particle_ptr[particle_id].name << "_kt_" << KT_array[iKT] << "_Kphi_" << Kphi[iphi]-Psi_ev << ".dat";
+
+       ofstream oCorrelfun_2p1;
+       oCorrelfun_2p1.open(oCorrelfun_2p1_stream.str().c_str());
+       int length = qnpts*qnpts + qnpts;
+       for(int i = 0; i < length; i++)
+           oCorrelfun_2p1 << scientific << setprecision(7) << setw(15)
+                          << q_out_2p1[i] << "  " << q_side_2p1[i] << "  " 
+                          << q_long_2p1[i] << "  " 
+                          << Correl_2p1_phidiff_num[iphi][i] << "  " 
+                          << Correl_2p1_phidiff_denorm[iphi][i] << "  "
+                          << Correl_2p1_phidiff_num[iphi][i]/Correl_2p1_phidiff_denorm[iphi][i]
+                          << "  " << error << endl;
+       oCorrelfun_2p1.close();
    }
    return;
 }

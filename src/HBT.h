@@ -53,8 +53,8 @@ class HBT
 
       int qnpts;
       double *q_out, *q_side, *q_long;
- 
-      int flag_1D_projection;
+
+      int qspace_sample_mode;
       int ndir;      // number of directions for 1D correlation function
       //store correlation functions
       double **Correl_1D_num, **Correl_1D_denorm;
@@ -63,12 +63,16 @@ class HBT
       double ***Correl_1D_phidiff_num, ***Correl_1D_phidiff_denorm;
       double ****Correl_3D_phidiff_num, ****Correl_3D_phidiff_denorm;
 
-      int flag_MC;
       int MC_samples;
       double q_max;
       double *q_out_MC, *q_side_MC, *q_long_MC;
       double *Correl_MC_num, *Correl_MC_denorm;
       double **Correl_MC_phidiff_num, **Correl_MC_phidiff_denorm;
+
+      int flag_2p1;
+      double *q_out_2p1, *q_side_2p1, *q_long_2p1;
+      double *Correl_2p1_num, *Correl_2p1_denorm;
+      double **Correl_2p1_phidiff_num, **Correl_2p1_phidiff_denorm;
       
       //HBT radii calculated from emission functions
       int flag_HBT_from_source_variance;
@@ -92,22 +96,28 @@ class HBT
       void calculate_azimuthal_dependent_KT_integrated_HBT_radii(double y);
 
       void Cal_azimuthal_averaged_correlationfunction_1D(int iKT, double K_y);
+      void Cal_azimuthal_averaged_correlationfunction_2p1D(int iKT, double K_y);
       void Cal_azimuthal_averaged_correlationfunction_3D(int iKT, double K_y);
       void Cal_azimuthal_averaged_correlationfunction_MC(int iKT, double K_y);
       void Cal_azimuthal_averaged_KT_inte_correlationfunction_1D(double K_y);
+      void Cal_azimuthal_averaged_KT_inte_correlationfunction_2p1D(double K_y);
       void Cal_azimuthal_averaged_KT_inte_correlationfunction_3D(double K_y);
       void Cal_azimuthal_averaged_KT_inte_correlationfunction_MC(double K_y);
       void Cal_azimuthal_dependent_correlationfunction_1D(int iKT, double K_y);
+      void Cal_azimuthal_dependent_correlationfunction_2p1D(int iKT, double K_y);
       void Cal_azimuthal_dependent_correlationfunction_3D(int iKT, double K_y);
       void Cal_azimuthal_dependent_correlationfunction_MC(int iKT, double K_y);
       void Cal_azimuthal_dependent_KT_inte_correlationfunction_1D(double K_y);
+      void Cal_azimuthal_dependent_KT_inte_correlationfunction_2p1D(double K_y);
       void Cal_azimuthal_dependent_KT_inte_correlationfunction_3D(double K_y);
       void Cal_azimuthal_dependent_KT_inte_correlationfunction_MC(double K_y);
 
       void Output_Correlationfunction_1D(int iKT);
+      void Output_Correlationfunction_2p1D(int iKT);
       void Output_Correlationfunction_3D(int iKT);
       void Output_Correlationfunction_MC(int iKT);
       void Output_Correlationfunction_azimuthal_dependent_1D(int iKT);
+      void Output_Correlationfunction_azimuthal_dependent_2p1D(int iKT);
       void Output_Correlationfunction_azimuthal_dependent_3D(int iKT);
       void Output_Correlationfunction_azimuthal_dependent_MC(int iKT);
 
