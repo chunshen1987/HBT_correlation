@@ -26,9 +26,9 @@ except(IOError):
     exit(1)
 
 print(purple + "\n" + "-"*80 
-      + "\n>>>>> Welcome to the event generator! <<<<<\n" + "-"*80 + normal)
+      + "\n>>>>> Welcome to the event-by-event afterburner generator! <<<<<\n" + "-"*80 + normal)
 
-walltime = '1:00:00'
+walltime = '5:00:00'
 node_folder_name = "node"
 code_folder_name = 'HBT_correlation'
 
@@ -53,7 +53,7 @@ for ifolder in range(len(file_folder_list)):
 #PBS -M chunshen1987@gmail.com
 #PBS -d %s
 
-module add ifort_icc/15.0
+module add ifort_icc/14.0.4
 (
     cd %s
     mkdir results
