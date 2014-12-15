@@ -63,9 +63,9 @@ module add ifort_icc/14.0.4
     mkdir results
     cp %s/tmp/surface.dat results/surface.dat
     cp %s/tmp/input results/input 
-    ./HBT.e n_KT=2 KT_min=0.0 KT_max=0.2 >> output.log
-    ./HBT.e n_KT=2 KT_min=0.4 KT_max=0.6 >> output.log
-    ./HBT.e n_KT=2 KT_min=0.8 KT_max=1.0 >> output.log
+    ./HBT.e n_KT=2 KT_min=0.0 KT_max=0.2 azimuthal_flag=0 >> output.log
+    ./HBT.e n_KT=2 KT_min=0.4 KT_max=0.6 azimuthal_flag=0 >> output.log
+    ./HBT.e n_KT=2 KT_min=0.8 KT_max=1.0 azimuthal_flag=0 >> output.log
     mv results ../HBT_results
 )
 """ % (ifolder+1, walltime, target_folder, code_folder_name, 
