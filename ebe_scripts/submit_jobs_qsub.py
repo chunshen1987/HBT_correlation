@@ -25,7 +25,7 @@ except(IOError):
 file_folder_list = glob(path.join(working_folder, '*'))
 
 for ifolder in range(len(file_folder_list)):
-    target_folder = path.join(file_folder_list[ifolder], 'job-%d' % (ifolder+1))
+    target_folder = path.abspath(file_folder_list[ifolder])
     for aFile in listdir(target_folder):
         if path.splitext(aFile)[1].lower() == '.pbs':
             commandString = "qsub %s" % aFile
