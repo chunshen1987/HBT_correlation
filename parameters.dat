@@ -10,7 +10,7 @@ kT_differenitial_flag = 1         # 0: integrate the pair momentum k_T over the 
                                   # 1: compute the correlation function at each specifiec kT point
 
 n_KT = 1                          # number of the pair momentum k_T to calculate
-KT_min = 0.0                      # minimum value of the pair momentum k_T (GeV)
+KT_min = 0.5                      # minimum value of the pair momentum k_T (GeV)
 KT_max = 0.5                      # maximum value of the pair momentum k_T (GeV)
 n_Kphi = 40                       # number of the azimuthal angles for the pair momentum k_T (range is assumed to be from 0 to 2*pi)
 
